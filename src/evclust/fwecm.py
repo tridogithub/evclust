@@ -110,7 +110,7 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
     return start_W
 
 
-def fwecm(x, c, g0=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
+def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
           epsi=1e-3, init="kmeans", disp=True):
     """
     Evidential c-means algorithm. `ecm` Computes a credal partition from a matrix of attribute data using the Evidential c-means (ECM) algorithm.
@@ -132,6 +132,8 @@ def fwecm(x, c, g0=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1
         Number of clusters.
     g0:
         Initial prototypes, matrix of size c x d. If not supplied, the prototypes are initialized randomly.
+    W:
+        Initial weight matrix which has size c x d. If not supplied, the weight matrix is initialized randomly.
     type:
         Type of focal sets ("simple": empty set, singletons and Omega; "full": all 2^c subsets of Omega;
             "pairs": empty set, singletons, Omega, and all or selected pairs).
@@ -182,10 +184,14 @@ def fwecm(x, c, g0=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1
     f = F.shape[0]
     card = np.sum(F[1:f, :], axis=1)
 
-    # randomly initialize weight matrix (c x d)
-    W = np.random.dirichlet(np.ones(d), c)
-    # Calculate weights of focal sets ((2^c -1) x d)
-    wplus = get_weight_focal_set(W, F, d)
+    if W is not None:
+        if not (W.shape[0] == c and W.shape[1] == d):
+            raise ValueError("Invalid size of inputted weight matrix.")
+    else:
+        # randomly initialize weight matrix (c x d)
+        W = np.random.dirichlet(np.ones(d), c)
+        # Calculate weights of focal sets ((2^c -1) x d)
+        wplus = get_weight_focal_set(W, F, d)
 
     # ------------------------ iterations--------------------------------
     Jbest = np.inf
