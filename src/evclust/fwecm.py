@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module contains the main function for ecm
+This module contains the main function for fw-ecm
 """
 
 # ---------------------- Packges------------------------------------------------
@@ -9,7 +9,7 @@ import numpy as np
 from scipy.cluster.vq import kmeans
 
 
-# ---------------------- ecm------------------------------------------------
+# ---------------------- fw-ecm------------------------------------------------
 def get_weight_focal_set(W, F, d):
     # Calculate weights of 2^c-1 subsets (2^c-1, d)
     f = F.shape[0]
