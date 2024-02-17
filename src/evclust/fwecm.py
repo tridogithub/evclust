@@ -305,11 +305,12 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             Jbest = J
             mbest = m
             gbest = g
+            wbest = W
         res = np.array([itrial, J, Jbest])
         res = np.squeeze(res)
         if ntrials > 1:
             print(res)
 
     m = np.concatenate((1 - np.sum(mbest, axis=1).reshape(n, 1), mbest), axis=1)
-    clus = extractMass(m, F, g=gbest, method="ecm", crit=Jbest, param={'alpha': alpha, 'beta': beta, 'delta': delta})
+    clus = extractMass(m, F, g=gbest, W=wbest, method="ecm", crit=Jbest, param={'alpha': alpha, 'beta': beta, 'delta': delta})
     return clus

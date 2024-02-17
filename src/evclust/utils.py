@@ -138,6 +138,7 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
         The normalized dissimilarity matrix (for method "kevclus"). Defaults to None.
     W (ndarray, optional): 
         The weight matrix (for method "EkNNclus"). Defaults to None.
+        The weight matrix (for method FW-ECM). Default to None
     J (ndarray, optional): 
         The matrix of indices (for method "kevclus"). Defaults to None.
     param (list, optional): 
