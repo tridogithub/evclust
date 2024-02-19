@@ -47,13 +47,13 @@ def get_gradient_matrix(W, M, V, F, X, alpha, beta):
                           (1, indices.size))  # size (n x j), j is number of sets containing \omega_{k}
             vjp = np.tile(V[indices, p], (n, 1))  # size (n x j), j is number of sets containing \omega_{k}
             gradient_j1i = np.tile(card[indices] ** (alpha - 1), (n, 1)) * (M[:, indices] ** beta) * sumWk[k, p] * (
-                        (xip - vjp) ** 2)
+                    (xip - vjp) ** 2)
             gradient_j1[k, p] = np.sum(np.sum(gradient_j1i, axis=1), axis=0)
 
     return gradient_j1
 
 
-def get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta):
+def get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta, noise_w):
     n = M.shape[0]
     f = F.shape[0]
     card = np.sum(F[1:f, :], axis=1)
@@ -69,12 +69,12 @@ def get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta):
     # Calculate objective function's new value
     mvide = 1 - np.sum(M, axis=1)
 
-    j1 = np.nansum((M ** beta) * DW[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + (delta ** 2) * np.nansum(
-        mvide[:f - 1] ** beta)
+    j1 = np.nansum((M ** beta) * DW[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + (np.sum(noise_w, axis=0)) * (
+                delta ** 2) * np.nansum(mvide[:f - 1] ** beta)
     return j1
 
 
-def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learning_rate=0.001, iterations=100,
+def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, noise_w, learning_rate=0.001, iterations=100,
                                   stopping_threshold=1e-3):
     d = start_W.shape[1]
     c = start_W.shape[0]
@@ -83,7 +83,7 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
     e_norm2 = np.linalg.norm(e) ** 2
     P = np.identity(d) - (1 / e_norm2) * np.dot(e, e.transpose())
 
-    old_j1 = get_j1_objective_func_value(start_W, M, V, F, X, alpha, beta, delta)
+    old_j1 = get_j1_objective_func_value(start_W, M, V, F, X, alpha, beta, delta, noise_w)
     for i in range(iterations):
         W = np.zeros((start_W.shape[0], start_W.shape[1]))
         gradientJ = get_gradient_matrix(start_W, M, V, F, X, alpha, beta)
@@ -95,7 +95,7 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
             new_wk = wk - learning_rate * (np.dot(P, gradientJk.reshape(d, 1)))
             W[k, :] = new_wk.transpose()
 
-        new_j1 = get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta)
+        new_j1 = get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta, noise_w)
 
         # Check stopping condition
         variance = old_j1 - new_j1
@@ -109,6 +109,7 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
 
     return start_W
 
+
 def get_noise_cluster_weights(x):
     """
     Args:
@@ -118,12 +119,13 @@ def get_noise_cluster_weights(x):
 
     """
     x_mean = np.mean(x, axis=0)
-    x_deviation = x - (np.tile(x_mean, (x.shape[0], 1)))
+    x_deviation = np.abs(x - (np.tile(x_mean, (x.shape[0], 1))))
     x_max_deviation = np.max(x_deviation, axis=0)
     r = x_max_deviation / np.sum(x_deviation, axis=0)
     r_sum = np.sum(r, axis=0)
     noise_w = r / r_sum
     return noise_w
+
 
 def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
           epsi=1e-3, init="kmeans", disp=True):
@@ -193,6 +195,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
 
     # Initialize the weight vector of noise cluster
     noise_w = get_noise_cluster_weights(x)
+    print(f"Intitial noise weights: {noise_w}")
 
     if (ntrials > 1) and (g0 is not None):
         print('WARNING: ntrials>1 and g0 provided. Parameter ntrials set to 1.')
@@ -253,7 +256,9 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
                     vect1 = (np.tile(DW[i, j], f - 1) / vect0) ** (1 / (beta - 1))
                     vect2 = np.tile(card[j] ** (alpha / (beta - 1)), f - 1) / (card ** (alpha / (beta - 1)))
                     vect3 = vect1 * vect2
-                    m[i, j] = 1 / (np.sum(vect3) + (card[j] ** alpha * DW[i, j] / (np.sum(noise_w, axis=0)*delta2)) ** (1 / (beta - 1)))
+                    m[i, j] = 1 / (
+                            np.sum(vect3) + (card[j] ** alpha * DW[i, j] / (np.sum(noise_w, axis=0) * delta2)) ** (
+                            1 / (beta - 1)))
                     if np.isnan(m[i, j]):
                         m[i, j] = 1  # in case the initial prototypes are training vectors
 
@@ -303,6 +308,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
 
             # Calculate weights
             W = projected_gradient_descent_jw(W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
+                                              noise_w=noise_w,
                                               learning_rate=0.001, iterations=100,
                                               stopping_threshold=1e-6)
             wplus = get_weight_focal_set(W, F, d)
@@ -312,7 +318,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             # J = np.nansum((m ** beta) * D * np.tile(card.reshape(1, f-1), (n, 1))) + delta2 * np.nansum(mvide ** beta)
             # J = np.nansum((m ** beta) * D[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + delta2 * np.nansum(
             #     mvide[:f - 1] ** beta)
-            J = get_j1_objective_func_value(W, m, gplus, F, x, alpha, beta, delta)
+            J = get_j1_objective_func_value(W, m, gplus, F, x, alpha, beta, delta, noise_w)
 
             if disp:
                 print([iter, J])
@@ -330,5 +336,6 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             print(res)
 
     m = np.concatenate((1 - np.sum(mbest, axis=1).reshape(n, 1), mbest), axis=1)
-    clus = extractMass(m, F, g=gbest, W=wbest, method="ecm", crit=Jbest, param={'alpha': alpha, 'beta': beta, 'delta': delta})
+    clus = extractMass(m, F, g=gbest, W=wbest, method="ecm", crit=Jbest,
+                       param={'alpha': alpha, 'beta': beta, 'delta': delta})
     return clus
