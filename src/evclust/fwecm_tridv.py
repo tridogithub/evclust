@@ -121,7 +121,7 @@ def get_noise_cluster_weights(x):
     x_mean = np.mean(x, axis=0)
     x_deviation = np.abs(x - (np.tile(x_mean, (x.shape[0], 1))))
     x_max_deviation = np.max(x_deviation, axis=0)
-    r = x_max_deviation / np.sum(x_deviation, axis=0)
+    r = x_max_deviation / np.std(x_deviation, axis=0)
     r_sum = np.sum(r, axis=0)
     noise_w = r / r_sum
     return noise_w
