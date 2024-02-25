@@ -187,18 +187,20 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
     f = F.shape[0]
     card = np.sum(F[1:f, :], axis=1)
 
-    if W is not None:
-        if not (W.shape[0] == c and W.shape[1] == d):
-            raise ValueError("Invalid size of inputted weight matrix.")
-    else:
-        # randomly initialize weight matrix (c x d)
-        W = np.random.dirichlet(np.ones(d), c)
-        # Calculate weights of focal sets ((2^c -1) x d)
-    wplus = get_weight_focal_set(W, F, d)
-
+    W0 = W
     # ------------------------ iterations--------------------------------
     Jbest = np.inf
     for itrial in range(ntrials):
+        ## Weight matrix
+        if W0 is not None:
+            if not (W.shape[0] == c and W.shape[1] == d):
+                raise ValueError("Invalid size of inputted weight matrix.")
+        else:
+            # randomly initialize weight matrix (c x d)
+            W = np.random.dirichlet(np.ones(d), c)
+            # Calculate weights of focal sets ((2^c -1) x d)
+        wplus = get_weight_focal_set(W, F, d)
+
         if g0 is None:
             if init == "kmeans":
                 centroids, distortion = kmeans(x, c)
