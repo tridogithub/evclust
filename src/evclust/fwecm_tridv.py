@@ -95,6 +95,9 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, noise
             new_wk = wk - learning_rate * (np.dot(P, gradientJk.reshape(d, 1)))
             W[k, :] = new_wk.transpose()
 
+        # If any weights go under zero --> stop
+        if np.any(W < 0):
+            break
         new_j1 = get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta, noise_w)
 
         # Check stopping condition
@@ -212,7 +215,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
         # randomly initialize weight matrix (c x d)
         W = np.random.dirichlet(np.ones(d), c)
         # Calculate weights of focal sets ((2^c -1) x d)
-        wplus = get_weight_focal_set(W, F, d)
+    wplus = get_weight_focal_set(W, F, d)
 
     # ------------------------ iterations--------------------------------
     Jbest = np.inf
