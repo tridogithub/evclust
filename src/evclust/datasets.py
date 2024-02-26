@@ -6,14 +6,14 @@
 This module contains all tests datasets
 """
 
-#---------------------- Packges------------------------------------------------
+# ---------------------- Packges------------------------------------------------
 import pathlib
 import pandas as pd
 DATASETS_DIR = pathlib.Path(__file__).parent / "datasets"
 
 
 
-#---------------------- Data 1-------------------------------------------------
+# ---------------------- Data 1-------------------------------------------------
 def load_decathlon():
     """The Decathlon dataset from FactoMineR."""
     
@@ -24,8 +24,15 @@ def load_decathlon():
     return decathlon
 
 
-#---------------------- Data 2-------------------------------------------------
+# ---------------------- Data 2-------------------------------------------------
 def load_iris():
     """Iris data."""
     return pd.read_csv(DATASETS_DIR / "iris.csv")
 
+# ---------------------- Data 3-------------------------------------------------
+def load_letters():
+    return pd.read_csv(DATASETS_DIR / "lettersIJLDavidson.csv")
+
+# ---------------------- Data 4-------------------------------------------------
+def load_seeds():
+    return pd.read_csv(DATASETS_DIR / "seeds.csv")
