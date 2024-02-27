@@ -698,6 +698,8 @@ def ev_summary(clus):
         print("Prototypes:")
         print(clus['g'])
     print(f"Number of outliers = {len(clus['outlier']):.2f}")
+    if(clus['W'] is not None):
+        print(f"Weight matrix: {clus['W']}")
     
     
     
