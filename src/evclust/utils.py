@@ -900,3 +900,70 @@ def ev_pcaplot(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
     plt.xlabel(f"Dim 1 ({variance_percent[0]}%)")
     plt.ylabel(f"Dim 2 ({variance_percent[1]}%)")
     plt.show()
+
+
+def ev_plot_2D(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
+    """
+    Plot PCA results with cluster colors.
+
+    This function performs PCA on the input data and plots the resulting PCA scores,
+    using the specified cluster information in 'x'.
+
+    Parameters:
+    ----------
+    data : DataFrame
+        The input 2D data containing the attributes (columns) and samples (rows).
+    x : object
+        An object of class "credpart", encoding a credal partition.
+    normalize : bool, optional
+        If True, the data will be normalized before performing PCA. Default is False.
+    splite : bool, optional
+        If True, provides access to several different axes-level functions that show the views of clusters.
+
+    Returns:
+    --------
+    None
+
+    The function plots the PCA scores in a scatter plot with cluster colors.
+    """
+    # if normalize:
+    #     data = (data - data.mean()) / data.std()  # Normalize the data
+
+    mas = pd.DataFrame(x["mass"])
+    c = len(np.unique(x['y_pl']))
+    cols = get_ensembles(x['F'])
+    mas.columns = cols
+    mas["Cluster"] = mas.apply(lambda row: row.idxmax(), axis=1)
+
+    # pca = PCA(n_components=2)
+    # pca_result = pca.fit_transform(data)
+
+    # variance_percent = np.round(pca.explained_variance_ratio_ * 100, 1)
+
+    ind_coord = pd.DataFrame(data, columns=["Dim.1", "Dim.2"])
+    ind_coord["Cluster"] = pd.Categorical(mas["Cluster"])
+    mean_coords = ind_coord.groupby('Cluster').mean()
+
+    pcolor = sns.color_palette("Dark2", n_colors=len(ind_coord["Cluster"].unique()))
+    plt.figure(figsize=(8, 6))
+
+    if splite:
+        sns.relplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", col="Cluster",
+                    style="Cluster", palette=pcolor, s=cex, col_wrap=int((c ** 2) / 2))
+    else:
+        sns.scatterplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", palette=pcolor,
+                        style="Cluster", s=cex)
+        sns.scatterplot(data=mean_coords, x="Dim.1", y="Dim.2", s=(cex + 25), hue="Cluster",
+                        palette=pcolor, style="Cluster", legend=False)
+
+    sns.despine()
+    legend = plt.legend(title="Cluster", loc='upper left', markerscale=0.3)
+    plt.setp(legend.get_title(), fontsize=7)
+    plt.setp(legend.get_texts(), fontsize=7)
+    plt.tick_params(axis='both', labelsize=7)
+    # plt.xlabel("X Label", fontsize=7)
+    # plt.ylabel("Y Label", fontsize=7)
+    # plt.xlabel(f"Dim 1 ({variance_percent[0]}%)")
+    # plt.ylabel(f"Dim 2 ({variance_percent[1]}%)")
+    plt.axis('equal')
+    plt.show()
