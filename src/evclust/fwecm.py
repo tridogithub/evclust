@@ -109,7 +109,7 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
         else:
             start_W = W
             old_j1 = new_j1
-
+    # print(f"Updated weights: \n{start_W}")
     return start_W
 
 
@@ -291,7 +291,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             # Calculate weights
             W = projected_gradient_descent_jw(W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
                                               learning_rate=0.001, iterations=100,
-                                              stopping_threshold=1e-6)
+                                              stopping_threshold=epsi)
             wplus = get_weight_focal_set(W, F, d)
 
             # Calculate objective function's new value
