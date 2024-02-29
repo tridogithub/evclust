@@ -199,6 +199,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             # randomly initialize weight matrix (c x d)
             W = np.random.dirichlet(np.ones(d), c)
             # Calculate weights of focal sets ((2^c -1) x d)
+        print(f"Initial weight matrix: \n {W}")
         wplus = get_weight_focal_set(W, F, d)
 
         if g0 is None:
