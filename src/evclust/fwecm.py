@@ -100,7 +100,8 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
             break
         new_j1 = get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta)
 
-        # Check stopping condition
+        # Check stopping condition ----------------
+        # Checking the gradient function's value greater than threshold
         variance = old_j1 - new_j1
         if variance <= stopping_threshold:
             if variance > 0:
@@ -195,11 +196,14 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
         if W0 is not None:
             if not (W.shape[0] == c and W.shape[1] == d):
                 raise ValueError("Invalid size of inputted weight matrix.")
+            else:
+                W = W0
         else:
             # randomly initialize weight matrix (c x d)
             W = np.random.dirichlet(np.ones(d), c)
-            # Calculate weights of focal sets ((2^c -1) x d)
+
         print(f"Initial weight matrix: \n {W}")
+        # Calculate weights of focal sets ((2^c -1) x d)
         wplus = get_weight_focal_set(W, F, d)
 
         if g0 is None:
@@ -222,12 +226,13 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
                 truc = np.tile(fi, (d, 1)).T
                 gplus[i - 1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
 
-            # calculation of distances to centers (n x (c-1))
+            # calculation of distances to centers (n x (2^c - 1))
+            # Input: x-data (nxd), gplus-center (2^c - 1)xd
             D = np.zeros((n, f - 1))
             for j in range(f - 1):
                 D[:, j] = np.nansum((x - np.tile(gplus[j, :], (n, 1))) ** 2, axis=1)
 
-            # calculation of weighted distances to centers (n x (c-1))
+            # calculation of weighted distances to centers (n x (2^c - 1))
             DW = np.zeros((n, f - 1))
             for j in range(f - 1):
                 wj = np.tile(wplus[j, :], (n, 1))  # Weight of each dimension wrt cluster j, repeated n times
