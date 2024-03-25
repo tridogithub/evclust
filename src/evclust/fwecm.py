@@ -44,11 +44,13 @@ def get_gradient_matrix(W, M, V, F, X, alpha, beta):
             indices = indices - 1
 
             xip = np.tile(X[:, p].reshape(n, 1),
-                          (1, indices.size))  # size (n x j), j is number of sets containing \omega_{k}
-            vjp = np.tile(V[indices, p], (n, 1))  # size (n x j), j is number of sets containing \omega_{k}
-            gradient_j1i = np.tile(card[indices] ** (alpha - 1), (n, 1)) * (M[:, indices] ** beta) * sumWk[k, p] * (
+                          (1, indices.size))  # size (n x j), j is number of sets containing \omega_{k}, data point at p-th dimension repeated j times as columns
+            vjp = np.tile(V[indices, p], (n, 1))  # size (n x j), j is number of sets containing \omega_{k}, centers of j sets repeated n times as rows
+            sumWki = np.tile(sumWk[indices, p], (n, 1)) # size (n x j), j is number of sets containing \omega_{k}, sum of weights at p-th dimension of sets which contains omega_{k}
+
+            gradient_j1i = np.tile(card[indices] ** (alpha - 2), (n, 1)) * (M[:, indices] ** beta) * sumWki * (
                         (xip - vjp) ** 2)
-            gradient_j1[k, p] = np.sum(np.sum(gradient_j1i, axis=1), axis=0)
+            gradient_j1[k, p] = 2 * np.sum(np.sum(gradient_j1i, axis=1), axis=0)
 
     return gradient_j1
 
@@ -100,17 +102,14 @@ def projected_gradient_descent_jw(start_W, M, V, F, X, alpha, beta, delta, learn
             break
         new_j1 = get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta)
 
-        # Check stopping condition ----------------
-        # Checking the gradient function's value greater than threshold
-        variance = old_j1 - new_j1
+        # Check stopping condition
+        variance = np.abs(old_j1 - new_j1)
         if variance <= stopping_threshold:
-            if variance > 0:
-                start_W = W
+            start_W = W
             break
         else:
             start_W = W
             old_j1 = new_j1
-    # print(f"Updated weights: \n{start_W}")
     return start_W
 
 
@@ -190,6 +189,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
 
     W0 = W
     # ------------------------ iterations--------------------------------
+    # Initialize V and W -> compute M -> compute new_V and new_W for the next interation.
     Jbest = np.inf
     for itrial in range(ntrials):
         ## Weight matrix
@@ -201,10 +201,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
         else:
             # randomly initialize weight matrix (c x d)
             W = np.random.dirichlet(np.ones(d), c)
-
         print(f"Initial weight matrix: \n {W}")
-        # Calculate weights of focal sets ((2^c -1) x d)
-        wplus = get_weight_focal_set(W, F, d)
 
         if g0 is None:
             if init == "kmeans":
@@ -220,6 +217,10 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
         iter = 0
         while pasfini:
             iter += 1
+            start_W = W
+            # Calculate weights of focal sets ((2^c -1) x d)
+            wplus = get_weight_focal_set(start_W, F, d)
+
             # Calculate (2^c - 1) centroids gplus
             for i in range(1, f):
                 fi = F[i, :]
@@ -250,7 +251,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
                     if np.isnan(m[i, j]):
                         m[i, j] = 1  # in case the initial prototypes are training vectors
 
-            # Calculation of centers
+            # Calculation of centers for the next iteration
             # old_V = g
             V = np.zeros((c, d))
             # Calculation of centers at p-th dimension
@@ -292,20 +293,16 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
 
                 Vp = np.linalg.solve(H, B)
                 V[:, p] = Vp.transpose()
+            # g for the next iteration
             g = V
 
-            # Calculate weights
-            W = projected_gradient_descent_jw(W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
+            # Calculate new weights for the next iteration
+            W = projected_gradient_descent_jw(start_W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
                                               learning_rate=0.001, iterations=100,
                                               stopping_threshold=epsi)
-            wplus = get_weight_focal_set(W, F, d)
 
             # Calculate objective function's new value
-            # mvide = 1 - np.sum(m, axis=1)
-            # J = np.nansum((m ** beta) * D * np.tile(card.reshape(1, f-1), (n, 1))) + delta2 * np.nansum(mvide ** beta)
-            # J = np.nansum((m ** beta) * D[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + delta2 * np.nansum(
-            #     mvide[:f - 1] ** beta)
-            J = get_j1_objective_func_value(W, m, gplus, F, x, alpha, beta, delta)
+            J = get_j1_objective_func_value(start_W, m, gplus, F, x, alpha, beta, delta)
 
             if disp:
                 print([iter, J])
@@ -323,5 +320,5 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
             print(res)
 
     m = np.concatenate((1 - np.sum(mbest, axis=1).reshape(n, 1), mbest), axis=1)
-    clus = extractMass(m, F, g=gbest, W=wbest, method="ecm", crit=Jbest, param={'alpha': alpha, 'beta': beta, 'delta': delta})
+    clus = extractMass(m, F, g=gbest, W=wbest, method="fw-ecm", crit=Jbest, param={'alpha': alpha, 'beta': beta, 'delta': delta})
     return clus
