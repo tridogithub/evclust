@@ -11,6 +11,7 @@ import seaborn as sns
 from ucimlrepo import fetch_ucirepo
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
+
 # Non-specificity values
 def calculate_non_specificity(cluster_model):
     m = cluster_model['mass']
@@ -47,9 +48,15 @@ numeric_labels = labels_encoder.fit_transform(y['class'])
 df = pd.concat([X, y], axis=1)
 
 # Feature weighted ECM clustering
+W = np.array([[0.06947213, 0.21751942, 0.0691499, 0.64385855],
+              [0.06810348, 0.26238236, 0.06911913, 0.60039504],
+              [0.25188023, 0.1001694, 0.47634386, 0.17160651]])
+# W = None
 c = 3
-model = fwecm(x=X, c=c, beta=2, alpha=0.1, delta=19, ntrials=1)
+model = fwecm(x=X, c=c, W=W, beta=2, alpha=1, delta=100, epsi=1e-5, ntrials=10)
+# model = ecm(x=X, c=c, beta=2, alpha=1, delta=100, epsi=1e-5, ntrials=1)
 print(f"Jbest: {model['crit']}")
+print(f"Centers: \n {model['g']}")
 
 true_labels = numeric_labels
 Y_betP = model['betp']
@@ -62,16 +69,15 @@ print(f"True labels: {numeric_labels}")
 print(f"Predicted labels: {predicted_labels}")
 print(f"Adjusted Rand Index (ARI): {ari}")
 
-# Traditional ECM
-model = ecm(x=X, c=3, beta=2, alpha=0.1, delta=19, ntrials=1)
-# Compute the Adjusted Rand Index (ARI)
-true_labels = numeric_labels
-Y_betP = model['betp']
-predicted_labels = np.argmax(Y_betP, axis=1)
-
-ari = adjusted_rand_score(true_labels, predicted_labels)
-print("----------Traditional ECM----------")
-print(f"True labels: {numeric_labels}")
-print(f"Predicted labels: {predicted_labels}")
-print(f"Adjusted Rand Index (ARI): {ari}")
-
+# # Traditional ECM
+# model = ecm(x=X, c=3, beta=2, alpha=0.1, delta=19, ntrials=1)
+# # Compute the Adjusted Rand Index (ARI)
+# true_labels = numeric_labels
+# Y_betP = model['betp']
+# predicted_labels = np.argmax(Y_betP, axis=1)
+#
+# ari = adjusted_rand_score(true_labels, predicted_labels)
+# print("----------Traditional ECM----------")
+# print(f"True labels: {numeric_labels}")
+# print(f"Predicted labels: {predicted_labels}")
+# print(f"Adjusted Rand Index (ARI): {ari}")
