@@ -44,8 +44,7 @@ def get_gradient_matrix(W, M, V, F, X, alpha, beta):
             indices = indices - 1
 
             # size (n x j), j is number of sets containing \omega_{k}, data point at p-th dimension repeated j times as columns
-            xip = np.tile(X[:, p].reshape(n, 1),
-                          (1, indices.size))
+            xip = np.tile(X[:, p].reshape(n, 1), (1, indices.size))
             # size (n x j), j is number of sets containing \omega_{k}, centers of j sets repeated n times as rows
             vjp = np.tile(V[indices, p], (n, 1))
             # size (n x j), j is number of sets containing \omega_{k}, sum of weights at p-th dimension of sets which contains omega_{k}
@@ -83,14 +82,14 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     '''
     Finding new weights that minimize the objective function by using Armijo condition.
     Args:
-        old_W:
-        M:
-        V:
-        F:
-        X:
-        alpha:
-        beta:
-        delta:
+        old_W: Weight matrix
+        M: Credal partition
+        V: Centroids (2^c - 1) x d
+        F: sets of clusters
+        X: data points (n x d)
+        alpha: constant parameter
+        beta: constant parameter
+        delta: constant parameter
 
     Returns:
 
@@ -107,6 +106,7 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     gamma = 0.5
     t = 1
     const = 0.001
+    iterations = 50
     new_W = None
     old_J = get_j1_objective_func_value(old_W, M, V, F, X, alpha, beta, delta)
     gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
@@ -115,30 +115,33 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
 
         new_J = get_j1_objective_func_value(new_W, M, V, F, X, alpha, beta, delta)
 
-        if (new_J - old_J) <= t*const* (np.sum(gradient_J * D)) :
+        if iterations == 0:
+            raise ValueError('WARNING: Armijo condition not converge')
+        elif (new_J - old_J) <= t*const* (np.sum(gradient_J * D)):
             finis = True
         else:
             t *= gamma
+        iterations -= 1
     print(f"value of the step length: {t}")
     return new_W
 
 
-def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, learning_rate=0.001, iterations=100,
+def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, iterations=100,
                                       stopping_threshold=1e-3):
     '''
     Apply projected gradient descent method to minimize the objective function.
     Args:
-        start_W:
-        M:
-        V:
-        F:
-        X:
-        alpha:
-        beta:
-        delta:
-        learning_rate:
-        iterations:
-        stopping_threshold:
+        start_W: Weight matrix
+        M: Credal partition
+        V: Centroids (2^c - 1) x d
+        F: sets of clusters
+        X: data points (n x d)
+        alpha: constant parameter
+        beta: constant parameter
+        delta: constant parameter
+        learning_rate: learning rate of the descent method
+        iterations: number of iterations
+        stopping_threshold: minimum change in objective function
 
     Returns:
 
@@ -162,7 +165,8 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, l
 def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
          epsi=1e-3, init="kmeans", disp=True):
     """
-    Evidential c-means algorithm. `ecm` Computes a credal partition from a matrix of attribute data using the Evidential c-means (ECM) algorithm.
+    Weighted Evidential c-means algorithm. `ecm` Computes a credal partition from a matrix of attribute data using
+    the Evidential c-means (ECM) algorithm with the addition of weights for dimensions.
 
     ECM is an evidential version algorithm of the Hard c-Means (HCM) and Fuzzy c-Means (FCM) algorithms.
     As in HCM and FCM, each cluster is represented by a prototype. However, in ECM, some sets of clusters
@@ -344,7 +348,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
 
             # Calculate new weights for the next iteration
             W = projected_gradient_descent_method(start_W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
-                                                  learning_rate=0.001, iterations=100,
+                                                  iterations=100,
                                                   stopping_threshold=epsi)
 
             # Calculate objective function's new value
