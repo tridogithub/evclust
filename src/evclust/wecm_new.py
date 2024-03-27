@@ -110,6 +110,7 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     new_W = None
     old_J = get_j1_objective_func_value(old_W, M, V, F, X, alpha, beta, delta)
     gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
+    # finding the step length t in {1, gamma^1, gamma^2, ...}
     while finis:
         new_W = old_W + t * D
 
@@ -260,7 +261,10 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
             else:
                 g = x[np.random.choice(n, c), :] + 0.1 * np.random.randn(c * d).reshape(c, d)
         else:
-            g = g0
+            if g0.shape[0] == c and g0.shape[1] == d:
+                g = g0
+            else:
+                raise ValueError("Invalid size of Initial prototypes")
         pasfini = True
         Jold = np.inf
         gplus = np.zeros((f - 1, d))
