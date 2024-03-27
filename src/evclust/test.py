@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from evclust.ecm import ecm
 from evclust.fwecm import fwecm
+from evclust.wecm_new import wecm
 from evclust.utils import ev_summary, ev_plot, ev_pcaplot
 from sklearn.decomposition import PCA
 import pandas as pd
@@ -48,15 +49,29 @@ numeric_labels = labels_encoder.fit_transform(y['class'])
 df = pd.concat([X, y], axis=1)
 
 # Feature weighted ECM clustering
-W = np.array([[0.06947213, 0.21751942, 0.0691499, 0.64385855],
-              [0.06810348, 0.26238236, 0.06911913, 0.60039504],
-              [0.25188023, 0.1001694, 0.47634386, 0.17160651]])
-# W = None
+
+### The initial things produce 0.7445 of ARI value
+# W = np.array([
+# [0.09743954 0.3559397  0.05490756 0.49171319]
+#  [0.08977217 0.11029495 0.1650923  0.63484057]
+#  [0.24106103 0.13353718 0.0570726  0.56832919]
+# ])
+#
+# g0 = np.array([
+# [6.69837057 3.07635634 5.87417793 2.21114012]
+#  [4.95830926 3.27085993 1.47396326 0.23649202]
+#  [6.07134779 2.63496741 4.81821913 1.46395735]
+# ])
+
+W = None
+g0 =None
 c = 3
-model = fwecm(x=X, c=c, W=W, beta=2, alpha=1, delta=100, epsi=1e-5, ntrials=10)
-# model = ecm(x=X, c=c, beta=2, alpha=1, delta=100, epsi=1e-5, ntrials=1)
+# model = fwecm(x=X, c=c, W=W, beta=2, alpha=1, delta=100, epsi=1e-5, ntrials=10)
+model = wecm(x=X, c=c, g0=g0, W=W, beta=2, alpha=1, delta=100, epsi=1e-2, ntrials=10)
+# model = ecm(x=X, c=c, g0=g0, beta=2, alpha=1, delta=100, epsi=1e-3, ntrials=1)
 print(f"Jbest: {model['crit']}")
 print(f"Centers: \n {model['g']}")
+print(f"Final weights: {model['W']}")
 
 true_labels = numeric_labels
 Y_betP = model['betp']

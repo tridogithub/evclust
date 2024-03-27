@@ -79,7 +79,7 @@ def get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta):
 
 
 def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
-    '''
+    """
     Finding new weights that minimize the objective function by using Armijo condition.
     Args:
         old_W: Weight matrix
@@ -93,19 +93,19 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
 
     Returns:
 
-    '''
+    """
     # Calculate project matrix P
     d = old_W.shape[1]
     e = np.ones((d, 1))
     e_norm2 = np.linalg.norm(e) ** 2
     P = np.identity(d) - (1 / e_norm2) * np.dot(e, e.transpose())
 
-    D = -np.transpose(np.dot(P, np.transpose(old_W))) # dk = -P.wk
+    D = -np.transpose(np.dot(P, np.transpose(old_W)))  # dk = -P.wk
 
-    finis = False
-    gamma = 0.5
-    t = 1
-    const = 0.001
+    finis = True
+    gamma = 0.5  # constant
+    t = gamma**0  # step length
+    const = 0.001  #
     iterations = 50
     new_W = None
     old_J = get_j1_objective_func_value(old_W, M, V, F, X, alpha, beta, delta)
@@ -116,20 +116,23 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
 
         new_J = get_j1_objective_func_value(new_W, M, V, F, X, alpha, beta, delta)
 
+        tmp1 = new_J - old_J
+        tmp2 = t * const * (np.sum(gradient_J * D))
         if iterations == 0:
-            raise ValueError('WARNING: Armijo condition not converge')
-        elif (new_J - old_J) <= t*const* (np.sum(gradient_J * D)):
-            finis = True
+            finis = False
+            # raise ValueError('WARNING: Armijo condition not converge')
+        elif (new_J - old_J) <= t * const * (np.sum(gradient_J * D)):
+            finis = False
         else:
             t *= gamma
         iterations -= 1
-    print(f"value of the step length: {t}")
+    print(f"Value of the step length: {t}")
     return new_W
 
 
 def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, iterations=100,
                                       stopping_threshold=1e-3):
-    '''
+    """
     Apply projected gradient descent method to minimize the objective function.
     Args:
         start_W: Weight matrix
@@ -146,7 +149,9 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, i
 
     Returns:
 
-    '''
+    """
+    print("---Start projected gradient descent method with the Armijo condition:")
+
     old_j1 = get_j1_objective_func_value(start_W, M, V, F, X, alpha, beta, delta)
     for i in range(iterations):
         W = finding_new_weights(start_W, M, V, F, X, alpha, beta, delta)
@@ -238,21 +243,23 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
     f = F.shape[0]
     card = np.sum(F[1:f, :], axis=1)
 
-    W0 = W
+    W0 = None
+    if W is not None:
+        if not (W.shape[0] == c and W.shape[1] == d):
+            raise ValueError("Invalid size of inputted weight matrix.")
+        else:
+            W0 = W
+    else:
+        # randomly initialize weight matrix (c x d)
+        W0 = np.random.dirichlet(np.ones(d), c)
+    print(f"Initial weights: \n {W0}")
+
     # ------------------------ iterations--------------------------------
     # Initialize V and W -> compute M -> compute new_V and new_W for the next interation.
     Jbest = np.inf
     for itrial in range(ntrials):
         ## Weight matrix
-        if W0 is not None:
-            if not (W.shape[0] == c and W.shape[1] == d):
-                raise ValueError("Invalid size of inputted weight matrix.")
-            else:
-                W = W0
-        else:
-            # randomly initialize weight matrix (c x d)
-            W = np.random.dirichlet(np.ones(d), c)
-        print(f"Initial weight matrix: \n {W}")
+        W=W0
 
         if g0 is None:
             if init == "kmeans":
@@ -265,6 +272,8 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
                 g = g0
             else:
                 raise ValueError("Invalid size of Initial prototypes")
+        print(f"Initial prototypes: \n {g}")
+
         pasfini = True
         Jold = np.inf
         gplus = np.zeros((f - 1, d))
@@ -350,7 +359,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
             # g for the next iteration
             g = V
 
-            # Calculate new weights for the next iteration
+            # Calculate new weights for the next iteration using current W, M and V
             W = projected_gradient_descent_method(start_W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
                                                   iterations=100,
                                                   stopping_threshold=epsi)
