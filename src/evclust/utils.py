@@ -967,3 +967,24 @@ def ev_plot_2D(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
     # plt.ylabel(f"Dim 2 ({variance_percent[1]}%)")
     plt.axis('equal')
     plt.show()
+
+def calculate_non_specificity(cluster_model):
+    m = cluster_model['mass']
+    F = cluster_model['F']
+    c = F.shape[1]
+    card = np.sum(F[1:F.shape[0], :], axis=1)
+
+    log_card = np.log2(card)
+    tmp = np.tile(log_card.transpose(), (m.shape[0], 1))
+    m_log_card = m[:, :-1] * tmp
+
+    mvide = m[:, -1][:, np.newaxis]
+    tmp2 = mvide * np.log2(c)
+    tmp3 = np.tile(tmp2, (1, m.shape[1] - 1))
+
+    non_specificity = m_log_card + tmp3
+    object_non_specificity = np.sum(non_specificity, axis=1)
+
+    print(f"Maximum Non-specificity value: {max(object_non_specificity)}")
+    print(f"Minimum Non-specificity value: {min(object_non_specificity)}")
+    print(f"Average Non-specificity value: {np.mean(object_non_specificity)}")
