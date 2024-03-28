@@ -988,3 +988,4 @@ def calculate_non_specificity(cluster_model):
     print(f"Maximum Non-specificity value: {max(object_non_specificity)}")
     print(f"Minimum Non-specificity value: {min(object_non_specificity)}")
     print(f"Average Non-specificity value: {np.mean(object_non_specificity)}")
+    print(f"Average Normalized Non-specificity value: {np.mean(object_non_specificity)/(np.log2(c))}")
