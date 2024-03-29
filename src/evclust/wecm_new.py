@@ -104,7 +104,7 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
 
     finis = True
     gamma = 0.5  # constant
-    t = gamma**0  # step length
+    t = gamma**1  # step length
     const = 0.001  #
     iterations = 50
     new_W = None
@@ -120,13 +120,14 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
         tmp2 = t * const * (np.sum(gradient_J * D))
         if iterations == 0:
             finis = False
+            print('WARNING: Armijo condition not converge - keep the old weight for the next iteration')
             # raise ValueError('WARNING: Armijo condition not converge')
         elif (new_J - old_J) <= t * const * (np.sum(gradient_J * D)):
             finis = False
         else:
             t *= gamma
         iterations -= 1
-    print(f"Value of the step length: {t}")
+    # print(f"Value of the step length: {t}")toys2c2
     return new_W
 
 
@@ -150,7 +151,7 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, i
     Returns:
 
     """
-    print("---Start projected gradient descent method with the Armijo condition:")
+    # print("---Start projected gradient descent method with the Armijo condition:")
 
     old_j1 = get_j1_objective_func_value(start_W, M, V, F, X, alpha, beta, delta)
     for i in range(iterations):
@@ -258,6 +259,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
     # Initialize V and W -> compute M -> compute new_V and new_W for the next interation.
     Jbest = np.inf
     for itrial in range(ntrials):
+        print(f"---------Iteration #{itrial+1}---------")
         ## Weight matrix
         W=W0
 
@@ -381,6 +383,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
         res = np.squeeze(res)
         if ntrials > 1:
             print(res)
+        print(f"---------End Iteration #{itrial+1}---------")
 
     m = np.concatenate((1 - np.sum(mbest, axis=1).reshape(n, 1), mbest), axis=1)
     clus = extractMass(m, F, g=gbest, W=wbest, method="fw-ecm", crit=Jbest,
