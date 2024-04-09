@@ -9,14 +9,14 @@ This module contains all tests datasets
 # ---------------------- Packges------------------------------------------------
 import pathlib
 import pandas as pd
-DATASETS_DIR = pathlib.Path(__file__).parent / "datasets"
 
+DATASETS_DIR = pathlib.Path(__file__).parent / "datasets"
 
 
 # ---------------------- Data 1-------------------------------------------------
 def load_decathlon():
     """The Decathlon dataset from FactoMineR."""
-    
+
     decathlon = pd.read_csv(DATASETS_DIR / "decathlon.csv")
     decathlon.columns = ["athlete", *map(str.lower, decathlon.columns[1:])]
     decathlon.athlete = decathlon.athlete.apply(str.title)
@@ -29,10 +29,24 @@ def load_iris():
     """Iris data."""
     return pd.read_csv(DATASETS_DIR / "iris.csv")
 
+
 # ---------------------- Data 3-------------------------------------------------
 def load_letters():
     return pd.read_csv(DATASETS_DIR / "lettersIJLDavidson.csv")
 
+
 # ---------------------- Data 4-------------------------------------------------
 def load_seeds():
     return pd.read_csv(DATASETS_DIR / "seeds.csv")
+
+
+def load_forest():
+    return pd.read_csv(DATASETS_DIR / "forest_type.csv")
+
+
+def load_thyroid():
+    return pd.read_csv(DATASETS_DIR / "thyroid.csv")
+
+
+def load_libras():
+    return pd.read_csv(DATASETS_DIR / "libras.csv", header=None)
