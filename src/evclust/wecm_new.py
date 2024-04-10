@@ -103,7 +103,7 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     D = -np.transpose(np.dot(P, np.transpose(old_W)))  # dk = -P.wk
 
     finis = True
-    gamma = 0.5  # constant
+    gamma = 0.1  # constant
     t = gamma**1  # step length
     const = 0.001  #
     iterations = 50
