@@ -6,7 +6,7 @@
 This module contains the utils function 
 """
 
-#---------------------- Packges------------------------------------------------
+# ---------------------- Packges------------------------------------------------
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,15 +15,10 @@ from scipy.spatial import ConvexHull
 from itertools import combinations
 import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import LabelEncoder
 
 
-
-
-
-
-
-
-#---------------------- makeF--------------------------------------------------
+# ---------------------- makeF--------------------------------------------------
 def makeF(c, type=['simple', 'full', 'pairs'], pairs=None, Omega=True):
     """
     Creation of a matrix of focal sets. `makeF` creates a matrix of focal sets.
@@ -51,7 +46,7 @@ def makeF(c, type=['simple', 'full', 'pairs'], pairs=None, Omega=True):
 
     """
     if type == 'full':  # All the 2^c focal sets
-        ii = np.arange(2**c)
+        ii = np.arange(2 ** c)
         N = len(ii)
         F = np.zeros((N, c))
         CC = np.array([np.binary_repr(i, width=c) for i in range(N)])
@@ -78,27 +73,26 @@ def makeF(c, type=['simple', 'full', 'pairs'], pairs=None, Omega=True):
     return F
 
 
-
-#---------------------- get_ensembles------------------------------------------
+# ---------------------- get_ensembles------------------------------------------
 def get_ensembles(table):
     result = []
     for row in table:
-        row_str = 'Cl_' + '_'.join([str(i + 1) if elem == 1 else str(int(elem)) for i, elem in enumerate(row) if elem != 0])
+        row_str = 'Cl_' + '_'.join(
+            [str(i + 1) if elem == 1 else str(int(elem)) for i, elem in enumerate(row) if elem != 0])
         result.append(row_str)
 
     result[0] = 'Cl_atypique'
     result[-1] = 'Cl_incertains'
 
-    cleaned_result = [''.join(ch for i, ch in enumerate(row_str) if ch != '_' or (i > 0 and row_str[i-1] != '_')) for row_str in result]
+    cleaned_result = [''.join(ch for i, ch in enumerate(row_str) if ch != '_' or (i > 0 and row_str[i - 1] != '_')) for
+                      row_str in result]
 
     return cleaned_result
 
 
-
-
-
-#---------------------- extractMass--------------------------------------------
-def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trace=None, D=None, W=None, J=None, param=None):
+# ---------------------- extractMass--------------------------------------------
+def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trace=None, D=None, W=None, J=None,
+                param=None):
     """
     Creates an object of class "credpart". `extractMass` computes different outputs (hard, fuzzy, rough partitions, etc.)
     from a credal partition and creates an object of class "credpart".
@@ -220,21 +214,21 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
     if any(F[0, :] == 1):
         F = np.vstack((np.zeros(c), F))  # add the empty set
         mass = np.hstack((np.zeros((n, 1)), mass))
-    
+
     f = F.shape[0]
     card = np.sum(F, axis=1)
-    
-    conf = mass[:, 0]             # degree of conflict
+
+    conf = mass[:, 0]  # degree of conflict
     C = 1 / (1 - conf)
-    mass_n = C[:, np.newaxis] * mass[:, 1:f]   # normalized mass function
-    pl = np.matmul(mass, F)          # unnormalized plausibility
-    pl_n = C[:, np.newaxis] * pl             # normalized plausibility
-    p = pl / np.sum(pl, axis=1, keepdims=True)      # plausibility-derived probability
-    bel = mass[:, card == 1]    # unnormalized belief
-    bel_n = C[:, np.newaxis] * bel            # normalized belief
-    y_pl = np.argmax(pl, axis=1)       # maximum plausibility cluster
-    y_bel = np.argmax(bel, axis=1)     # maximum belief cluster
-    Y = F[np.argmax(mass, axis=1), :]    # maximum mass set of clusters
+    mass_n = C[:, np.newaxis] * mass[:, 1:f]  # normalized mass function
+    pl = np.matmul(mass, F)  # unnormalized plausibility
+    pl_n = C[:, np.newaxis] * pl  # normalized plausibility
+    p = pl / np.sum(pl, axis=1, keepdims=True)  # plausibility-derived probability
+    bel = mass[:, card == 1]  # unnormalized belief
+    bel_n = C[:, np.newaxis] * bel  # normalized belief
+    y_pl = np.argmax(pl, axis=1)  # maximum plausibility cluster
+    y_bel = np.argmax(bel, axis=1)  # maximum belief cluster
+    Y = F[np.argmax(mass, axis=1), :]  # maximum mass set of clusters
 
     # non dominated elements
     Ynd = np.zeros((n, c))
@@ -242,13 +236,13 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
         ii = np.where(pl[i, :] >= bel[i, y_bel[i]])[0]
         Ynd[i, ii] = 1
 
-    #P = F / card[:, np.newaxis]
-    nonzero_card = np.where(card != 0)  
+    # P = F / card[:, np.newaxis]
+    nonzero_card = np.where(card != 0)
     P = np.zeros_like(F)
     P[nonzero_card] = F[nonzero_card] / card[nonzero_card, np.newaxis]
     P[0, :] = 0
-    betp = np.matmul(mass, P)       # unnormalized pignistic probability
-    betp_n = C[:, np.newaxis] * betp        # normalized pignistic probability
+    betp = np.matmul(mass, P)  # unnormalized pignistic probability
+    betp_n = C[:, np.newaxis] * betp  # normalized pignistic probability
 
     lower_approx, upper_approx = [], []
     lower_approx_nd, upper_approx_nd = [], []
@@ -260,7 +254,7 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
         lower_approx.append(np.where((Y[:, i] == 1) & (nclus == 1))[0])  # upper approximation
         upper_approx_nd.append(np.where(Ynd[:, i] == 1)[0])  # upper approximation
         lower_approx_nd.append(np.where((Ynd[:, i] == 1) & (nclus_nd == 1))[0])  # upper approximation
-    
+
     # Nonspecificity
     card = np.concatenate(([c], card[1:f]))
     Card = np.tile(card, (n, 1))
@@ -270,22 +264,14 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
             'y_pl': y_pl, 'y_bel': y_bel, 'Y': Y, 'betp': betp, 'betp_n': betp_n, 'p': p,
             'upper_approx': upper_approx, 'lower_approx': lower_approx, 'Ynd': Ynd,
             'upper_approx_nd': upper_approx_nd, 'lower_approx_nd': lower_approx_nd,
-            'N': N, 'outlier': outlier , 'g': g, 'S': S,
+            'N': N, 'outlier': outlier, 'g': g, 'S': S,
             'crit': crit, 'Kmat': Kmat, 'trace': trace, 'D': D, 'method': method, 'W': W, 'J': J, 'param': param}
 
     return clus
 
 
-
-
-
-
-
-
-
-#---------------------- setCentersECM--------------------------------------------
+# ---------------------- setCentersECM--------------------------------------------
 def setCentersECM(x, m, F, Smean, alpha, beta):
-    
     """
     Computation of centers in CECM. Function called by cecm.
 
@@ -350,14 +336,7 @@ def setCentersECM(x, m, F, Smean, alpha, beta):
     return g
 
 
-
-
-
-
-
-
-
-#---------------------- setCentersECM------------------------------------------
+# ---------------------- setCentersECM------------------------------------------
 def createMLCL(y, nbConst):
     """
     Random generation of Must-Link (ML) and Cannot-Link (CL) constraints.
@@ -385,16 +364,11 @@ def createMLCL(y, nbConst):
     const = np.array(pairs)[selected_pairs].T
     ML = const[:, y[const[0]] == y[const[1]]]
     CL = const[:, y[const[0]] != y[const[1]]]
-    
+
     return {'ML': ML, 'CL': CL}
 
 
-
-
-
-
-
-#---------------------- setDistances------------------------------------------
+# ---------------------- setDistances------------------------------------------
 def setDistances(x, F, g, m, alpha, distance):
     """
     Computation of distances to centers and variance matrices in each cluster.
@@ -430,11 +404,11 @@ def setDistances(x, F, g, m, alpha, distance):
     nbAtt = x.shape[1]
     beta = 2
 
-    gplus = np.zeros((nbFoc-1, nbAtt))
+    gplus = np.zeros((nbFoc - 1, nbAtt))
     for i in range(1, nbFoc):
         fi = F[i, :]
         truc = np.tile(fi, (nbAtt, 1)).T
-        gplus[i-1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
+        gplus[i - 1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
 
     if distance == 0:
         S = [np.eye(nbAtt)] * K  # Euclidean distance
@@ -447,20 +421,20 @@ def setDistances(x, F, g, m, alpha, distance):
                 omegai = np.tile(F[i, :], (K, 1))
                 indAj = np.where(np.sum(np.minimum(omegai, F), axis=1) > 0)[0]
                 for j in indAj:
-                    aux = x[k, :] - gplus[j-1, :]
-                    Sigmai += np.sum(F[j, :]) ** (alpha - 1) * m[k, j-1] ** beta * np.outer(aux, aux)
-            Si = np.linalg.det(Sigmai) ** (1/nbAtt) * np.linalg.inv(Sigmai)
+                    aux = x[k, :] - gplus[j - 1, :]
+                    Sigmai += np.sum(F[j, :]) ** (alpha - 1) * m[k, j - 1] ** beta * np.outer(aux, aux)
+            Si = np.linalg.det(Sigmai) ** (1 / nbAtt) * np.linalg.inv(Sigmai)
             S.append(Si)
 
     Smean = []
-    for i in range(nbFoc-1):
+    for i in range(nbFoc - 1):
         aux = np.zeros((nbAtt, nbAtt))
         for j in range(K):
-            aux += F[i+1, j] * S[j]
-        Smean.append(aux / max(np.sum(F[i+1, :]), 1))
+            aux += F[i + 1, j] * S[j]
+        Smean.append(aux / max(np.sum(F[i + 1, :]), 1))
 
-    D = np.zeros((n, nbFoc-1))
-    for j in range(nbFoc-1):
+    D = np.zeros((n, nbFoc - 1))
+    for j in range(nbFoc - 1):
         aux = x - np.tile(gplus[j, :], (n, 1))
         if distance == 0:
             D[:, j] = np.diag(np.dot(aux, aux.T))
@@ -470,16 +444,7 @@ def setDistances(x, F, g, m, alpha, distance):
     return {'D': D, 'Smean': Smean}
 
 
-
-
-
-
-
-
-
-
-
-#--------------------------- solqp---------------------------------------------
+# --------------------------- solqp---------------------------------------------
 def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
     """
     Solve the quadratic program in standard form:
@@ -520,16 +485,16 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
     n = A.shape[1]
     eps = np.finfo(float).eps
 
-    #ob = 0.5 * np.dot(x.T, np.dot(Q, x)) + np.dot(c.T, x)
-    ob = 0.5 * x.T @ Q @ x + c@ x
+    # ob = 0.5 * np.dot(x.T, np.dot(Q, x)) + np.dot(c.T, x)
+    ob = 0.5 * x.T @ Q @ x + c @ x
 
     alpha = 0.9
     comp = np.random.uniform(size=n)
-    #comp = np.linalg.solve(np.block([[np.diag(comp), A], [A.T, np.zeros((m, m))]]),np.concatenate([comp, np.zeros(m)]))[:n]
-    #comp = np.linalg.pinv(np.block([[np.diag(comp), A.T], [A, np.zeros((m, m))]])) @ np.concatenate([comp, np.zeros(m)])
-    
+    # comp = np.linalg.solve(np.block([[np.diag(comp), A], [A.T, np.zeros((m, m))]]),np.concatenate([comp, np.zeros(m)]))[:n]
+    # comp = np.linalg.pinv(np.block([[np.diag(comp), A.T], [A, np.zeros((m, m))]])) @ np.concatenate([comp, np.zeros(m)])
+
     comp = np.linalg.solve(np.vstack((np.hstack((np.diag(comp), A.T)), np.hstack((A, np.zeros((m, m)))))),
-                          np.vstack((comp.reshape(-1, 1), np.zeros((m, 1)))))
+                           np.vstack((comp.reshape(-1, 1), np.zeros((m, 1)))))
 
     comp = comp[:n]
     comp = comp / x
@@ -540,16 +505,16 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
         nora = np.max(comp)
         if nora == 0:
             print('The problem has a unique feasible point')
-            #return
+            # return
         nora = 0.01 / nora
-        
+
     x = x + nora * comp
 
     obvalue = np.dot(x.T, np.dot(Q, x)) / 2 + np.dot(c, x)
     obvalue = obvalue[0, 0]
-    
-    obvalue = np.sum(x.T @ (Q @ x)/2 + c @ x)
-    
+
+    obvalue = np.sum(x.T @ (Q @ x) / 2 + c @ x)
+
     obhis = [obvalue]
     lower = -np.inf
     zhis = [lower]
@@ -563,7 +528,7 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
         # spphase2
         lamda = (1 - beta) * lamda
         go = 0
-        #gg = np.dot(Q, x) + c
+        # gg = np.dot(Q, x) + c
         gg = np.dot(Q, x.reshape(-1, 1)) + c.reshape(-1, 1)
         XX = np.diag(x)
         AA = np.dot(A, XX)
@@ -571,14 +536,14 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
 
         # Repeatly solve an ellipsoid constrained QP problem by solving a linear system equation until find a positive solution.
         while go <= 0:
-            #u = np.linalg.solve(np.block([[XX + lamda * np.diag(np.ones(n)), AA.T], [AA, np.zeros((m, m))]]), np.concatenate([- np.multiply(x, gg.T.flatten()).reshape(-1, 1), np.zeros((m, 1))], axis=0))
-            #u = np.linalg.solve(np.block([[XX + lamda * np.diag(np.ones(n)), AA.T], [AA, np.zeros((m, m))]]), np.vstack([- np.multiply(x, gg.T).T, np.zeros((m, 1))]))
-            
+            # u = np.linalg.solve(np.block([[XX + lamda * np.diag(np.ones(n)), AA.T], [AA, np.zeros((m, m))]]), np.concatenate([- np.multiply(x, gg.T.flatten()).reshape(-1, 1), np.zeros((m, 1))], axis=0))
+            # u = np.linalg.solve(np.block([[XX + lamda * np.diag(np.ones(n)), AA.T], [AA, np.zeros((m, m))]]), np.vstack([- np.multiply(x, gg.T).T, np.zeros((m, 1))]))
+
             a = np.hstack((XX + lamda * np.diag(np.ones(n)), AA.T))
             b = np.hstack((AA, np.zeros((m, m))))
-            ree = np.vstack((a,b))
+            ree = np.vstack((a, b))
             res = np.vstack((- np.multiply(x, gg.T).T, np.zeros((m, 1))))
-            u = np.linalg.solve(ree,res)
+            u = np.linalg.solve(ree, res)
 
             xx = x + np.multiply(x, u[:n].flatten())
             xx = xx.T
@@ -589,10 +554,9 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
             lamda = 2 * lamda
             if lamda >= (1 + np.abs(obvalue)) / toler:
                 print('The problem seems unbounded.')
-                y = -u[n:n+m]
+                y = -u[n:n + m]
 
-
-        y = -u[n:n+m]
+        y = -u[n:n + m]
         u = u[:n]
         nora = min(u)
         if nora < 0:
@@ -643,14 +607,7 @@ def solqp(Q, A, b, c, x, verbose=False, toler=1e-5, beta=0.8):
     return {'x': x, 'y': y, 'obhis': obhis}
 
 
-
-
-
-
-
-
-
-#---------------------- summary------------------------------------------------
+# ---------------------- summary------------------------------------------------
 def ev_summary(clus):
     """
     Summary of a credal partition. `summary_credpart` is the summary method for "credpart" objects.
@@ -698,21 +655,15 @@ def ev_summary(clus):
         print("Prototypes:")
         print(clus['g'])
     print(f"Number of outliers = {len(clus['outlier']):.2f}")
-    if(clus['W'] is not None):
+    if (clus['W'] is not None):
         print(f"Weight matrix: {clus['W']}")
-    
-    
-    
-    
-    
 
 
-
-#---------------------- plot------------------------------------------------
+# ---------------------- plot------------------------------------------------
 def ev_plot(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
-                  cexvar='pl', cex_outliers=5, cex_protos=5, lwd=1,
-                  ask=False, plot_Shepard=False, plot_approx=True,
-                  plot_protos=True, xlab='$x_1$' , ylab='$x_2$'):
+            cexvar='pl', cex_outliers=5, cex_protos=5, lwd=1,
+            ask=False, plot_Shepard=False, plot_approx=True,
+            plot_protos=True, xlab='$x_1$', ylab='$x_2$'):
     """
     Plotting a credal partition. Generates plots of a credal partition.     
     This function plots different views of a credal partition in a two-dimensional attribute space.
@@ -767,29 +718,29 @@ def ev_plot(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
     a second plot with Shepard's diagram (degrees of conflict vs. transformed dissimilarities) is drawn.
     If input X is not supplied and the Shepard diagram exists, then only the Shepard diagram is drawn.
     """
-  
+
     clus = x
     if X is not None:
         x = X
         y = ytrue
         plt.rcParams['interactive'] = ask
-        
+
         if y is None:
             y = clus['y_pl']
         c = len(np.unique(clus['y_pl']))
-        
+
         if Approx == 1:
             lower_approx = clus['lower_approx_nd']
             upper_approx = clus['upper_approx_nd']
         else:
             lower_approx = clus['lower_approx']
             upper_approx = clus['upper_approx']
-        
+
         if Outliers:
             for i in range(c):
                 lower_approx[i] = np.setdiff1d(lower_approx[i], clus['outlier'])
                 upper_approx[i] = np.setdiff1d(upper_approx[i], clus['outlier'])
-        
+
         if cexvar == 'pl':
             cex = cex * np.apply_along_axis(np.max, 1, clus['pl'])
         elif cexvar == 'pl_n':
@@ -798,43 +749,36 @@ def ev_plot(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
             cex = cex * np.apply_along_axis(np.max, 1, clus['bel'])
         elif cexvar == 'bel_n':
             cex = cex * np.apply_along_axis(np.max, 1, clus['bel_n'])
-        
+
         colors = [mcolors.to_rgba('C{}'.format(i)) for i in y]
         color = [mcolors.to_rgba('C{}'.format(i)) for i in np.unique(y)]
-        plt.scatter(x.iloc[:, 0], x.iloc[:, 1], c=colors,  s=cex)
+        plt.scatter(x.iloc[:, 0], x.iloc[:, 1], c=colors, s=cex)
         if Outliers:
             plt.scatter(x.iloc[clus['outlier'], 0], x.iloc[clus['outlier'], 1], c='black', marker='x', s=cex_outliers)
         if 'g' in clus and plot_protos and clus['g'] is not None:
             plt.scatter(clus['g'][:, 0], clus['g'][:, 1], c=color, marker='s', s=cex_protos)
-        
+
         if plot_approx:
             for i in range(1, c + 1):
                 xx = x.iloc[lower_approx[i - 1]]
                 if xx.shape[0] >= 3:
                     hull = ConvexHull(xx.iloc[:, :2])
                     for simplex in hull.simplices:
-                        plt.plot(xx.iloc[simplex, 0], xx.iloc[simplex, 1], linewidth=lwd, color='C{}'.format(i-1))
+                        plt.plot(xx.iloc[simplex, 0], xx.iloc[simplex, 1], linewidth=lwd, color='C{}'.format(i - 1))
                 xx = x.iloc[upper_approx[i - 1]]
                 if xx.shape[0] >= 3:
                     hull = ConvexHull(xx.iloc[:, :2])
                     for simplex in hull.simplices:
-                        plt.plot(xx.iloc[simplex, 0], xx.iloc[simplex, 1],  linestyle='dashed', linewidth=lwd, color='C{}'.format(i-1))
-        
+                        plt.plot(xx.iloc[simplex, 0], xx.iloc[simplex, 1], linestyle='dashed', linewidth=lwd,
+                                 color='C{}'.format(i - 1))
+
         plt.xlabel(xlab)
         plt.ylabel(ylab)
         plt.tight_layout()
         plt.show()
-        
-        
-        
 
 
-
-
-
-
-
-#---------------------- plot------------------------------------------------
+# ---------------------- plot------------------------------------------------
 def ev_pcaplot(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
     """
     Plot PCA results with cluster colors. 
@@ -881,18 +825,17 @@ def ev_pcaplot(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
     plt.figure(figsize=(8, 6))
 
     if splite:
-        sns.relplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", col="Cluster", 
-                    style="Cluster", palette=pcolor, s=cex, col_wrap=int((c**2)/2)) 
+        sns.relplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", col="Cluster",
+                    style="Cluster", palette=pcolor, s=cex, col_wrap=int((c ** 2) / 2))
     else:
-        sns.scatterplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", palette=pcolor, 
+        sns.scatterplot(data=ind_coord, x="Dim.1", y="Dim.2", hue="Cluster", palette=pcolor,
                         style="Cluster", s=cex)
-        sns.scatterplot(data=mean_coords, x="Dim.1", y="Dim.2", s=(cex+25), hue="Cluster", 
-                        palette=pcolor, style="Cluster",legend=False)
+        sns.scatterplot(data=mean_coords, x="Dim.1", y="Dim.2", s=(cex + 25), hue="Cluster",
+                        palette=pcolor, style="Cluster", legend=False)
 
-        
     sns.despine()
     legend = plt.legend(title="Cluster", loc='lower right', markerscale=0.3)
-    plt.setp(legend.get_title(), fontsize=7) 
+    plt.setp(legend.get_title(), fontsize=7)
     plt.setp(legend.get_texts(), fontsize=7)
     plt.tick_params(axis='both', labelsize=7)
     plt.xlabel("X Label", fontsize=7)
@@ -970,8 +913,8 @@ def ev_plot_2D(data, x, normalize=False, splite=False, cex=8, cex_protos=5):
 
 
 def ev_plot_PCA(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
-            cexvar='pl', cex_outliers=5, cex_protos=5, lwd=1,
-            ask=False, plot_Shepard=False, plot_approx=True):
+                cexvar='pl', cex_outliers=5, cex_protos=5, lwd=1,
+                ask=False, plot_Shepard=False, plot_approx=True):
     """
     Plotting a credal partition. Generates plots of a credal partition.
     This function plots different views of a credal partition in a two-dimensional attribute space.
@@ -1078,6 +1021,7 @@ def ev_plot_PCA(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
         plt.tight_layout()
         plt.show()
 
+
 def calculate_non_specificity(cluster_model):
     m = cluster_model['mass']
     F = cluster_model['F']
@@ -1098,4 +1042,47 @@ def calculate_non_specificity(cluster_model):
     print(f"Maximum Non-specificity value: {max(object_non_specificity)}")
     print(f"Minimum Non-specificity value: {min(object_non_specificity)}")
     print(f"Average Non-specificity value: {np.mean(object_non_specificity)}")
-    print(f"Average Normalized Non-specificity value: {np.mean(object_non_specificity)/(np.log2(c))}")
+    print(f"Average Normalized Non-specificity value: {np.mean(object_non_specificity) / (np.log2(c))}")
+
+
+def plotting(X, y, ds_name, matrix_plot=False, markers=None):
+    """
+    Plotting the dataset in PCA and maxtrix plot.
+    Args:
+        X: DataFrame containing dataset
+        y: DataFrame containing labels
+        ds_name: Dataset name
+        matrix_plot: False (default), True
+        markers: a list of markers
+
+    Returns:
+
+    """
+    label_column_nm = y.columns[0]
+    labels_encoder = LabelEncoder()
+    numeric_labels = labels_encoder.fit_transform(y[label_column_nm])
+    marker_list = [markers[i] for i in numeric_labels]
+
+    # Scatter matrix plot
+    if matrix_plot:
+        df = pd.concat([X, y], axis=1)
+        sns.pairplot(df, corner=True, hue=label_column_nm, markers=markers)
+
+    # Perform PCA for dimensionality reduction
+    pca = PCA(n_components=2)  # Reduce to 2 dimensions
+    data_reduced = pca.fit_transform(X)
+    variance_percent = np.round(pca.explained_variance_ratio_ * 100, 1)
+
+    # Plot the reduced dataset with different colors for each cluster
+    print(X[:5])
+    colors = [mcolors.to_rgba('C{}'.format(i)) for i in numeric_labels]
+
+    plt.figure(figsize=(8, 6))
+    for i in range(data_reduced.shape[0]):
+        plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=marker_list[i])
+    plt.title(f"{ds_name} - 2D Plot of the Dataset after PCA")
+    plt.xlabel(f"Principal Component 1 ({variance_percent[0]}%)")
+    plt.ylabel(f"Principal Component 2 ({variance_percent[1]}%)")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
