@@ -1022,7 +1022,7 @@ def ev_plot_PCA(x, X=None, ytrue=None, Outliers=True, Approx=1, cex=1,
         plt.show()
 
 
-def calculate_non_specificity(cluster_model):
+def calculate_non_specificity(cluster_model, verbose=True):
     m = cluster_model['mass']
     F = cluster_model['F']
     c = F.shape[1]
@@ -1039,10 +1039,12 @@ def calculate_non_specificity(cluster_model):
     non_specificity = m_log_card + tmp3
     object_non_specificity = np.sum(non_specificity, axis=1)
 
-    print(f"Maximum Non-specificity value: {max(object_non_specificity)}")
-    print(f"Minimum Non-specificity value: {min(object_non_specificity)}")
-    print(f"Average Non-specificity value: {np.mean(object_non_specificity)}")
-    print(f"Average Normalized Non-specificity value: {np.mean(object_non_specificity) / (np.log2(c))}")
+    if verbose:
+        print(f"Maximum Non-specificity value: {max(object_non_specificity)}")
+        print(f"Minimum Non-specificity value: {min(object_non_specificity)}")
+        print(f"Average Non-specificity value: {np.mean(object_non_specificity)}")
+        print(f"Average Normalized Non-specificity value: {np.mean(object_non_specificity) / (np.log2(c))}")
+    return np.mean(object_non_specificity)
 
 
 def plotting(X, y, ds_name, matrix_plot=False, markers=None):
