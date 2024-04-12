@@ -1066,7 +1066,8 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     # Scatter matrix plot
     if matrix_plot:
         df = pd.concat([X, y], axis=1)
-        sns.pairplot(df, corner=True, hue=label_column_nm, markers=markers)
+        df.columns = list(df.columns[:-1]) + ['class']
+        sns.pairplot(df, corner=True, hue='class', markers=markers)
 
     # Perform PCA for dimensionality reduction
     pca = PCA(n_components=2)  # Reduce to 2 dimensions
