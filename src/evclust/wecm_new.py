@@ -279,18 +279,18 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
         pasfini = True
         Jold = np.inf
         gplus = np.zeros((f - 1, d))
+        # Calculate (2^c - 1) centroids gplus
+        for i in range(1, f):
+            fi = F[i, :]
+            truc = np.tile(fi, (d, 1)).T
+            gplus[i - 1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
+
         iter = 0
         while pasfini:
             iter += 1
             start_W = W
             # Calculate weights of focal sets ((2^c -1) x d)
             wplus = get_weight_focal_set(start_W, F, d)
-
-            # Calculate (2^c - 1) centroids gplus
-            for i in range(1, f):
-                fi = F[i, :]
-                truc = np.tile(fi, (d, 1)).T
-                gplus[i - 1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
 
             # calculation of distances to centers (n x (2^c - 1))
             # Input: x-data (nxd), gplus-center (2^c - 1)xd
@@ -360,6 +360,11 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
                 V[:, p] = Vp.transpose()
             # g for the next iteration
             g = V
+            # Calculate (2^c - 1) centroids gplus
+            for i in range(1, f):
+                fi = F[i, :]
+                truc = np.tile(fi, (d, 1)).T
+                gplus[i - 1, :] = np.sum(g * truc, axis=0) / np.sum(fi)
 
             # Calculate new weights for the next iteration using current W, M and V
             W = projected_gradient_descent_method(start_W, M=m, V=gplus, F=F, X=x, alpha=alpha, beta=beta, delta=delta,
@@ -367,7 +372,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
                                                   stopping_threshold=epsi)
 
             # Calculate objective function's new value
-            J = get_j1_objective_func_value(start_W, m, gplus, F, x, alpha, beta, delta)
+            J = get_j1_objective_func_value(W, m, gplus, F, x, alpha, beta, delta)
 
             if disp:
                 print([iter, J])
