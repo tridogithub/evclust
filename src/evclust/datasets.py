@@ -50,3 +50,6 @@ def load_thyroid():
 
 def load_libras():
     return pd.read_csv(DATASETS_DIR / "libras.csv", header=None)
+
+def load_2d_dataset():
+    return pd.read_csv(DATASETS_DIR / "2dDataset.csv")
