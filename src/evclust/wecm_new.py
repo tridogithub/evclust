@@ -100,18 +100,18 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     e_norm2 = np.linalg.norm(e) ** 2
     P = np.identity(d) - (1 / e_norm2) * np.dot(e, e.transpose())
 
-    D = -np.transpose(np.dot(P, np.transpose(old_W)))  # dk = -P.wk
+    gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
+    D = -np.transpose(np.dot(P, np.transpose(gradient_J)))  # dk = -P.wk
 
-    finis = True
+    finis = False
     gamma = 0.1  # constant
     t = gamma**1  # step length
     const = 0.001  #
     iterations = 50
     new_W = None
     old_J = get_j1_objective_func_value(old_W, M, V, F, X, alpha, beta, delta)
-    gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
     # finding the step length t in {1, gamma^1, gamma^2, ...}
-    while finis:
+    while not finis:
         new_W = old_W + t * D
 
         new_J = get_j1_objective_func_value(new_W, M, V, F, X, alpha, beta, delta)
@@ -119,15 +119,15 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
         tmp1 = new_J - old_J
         tmp2 = t * const * (np.sum(gradient_J * D))
         if iterations == 0:
-            finis = False
+            finis = True
             print('WARNING: Armijo condition not converge - keep the old weight for the next iteration')
             # raise ValueError('WARNING: Armijo condition not converge')
         elif (new_J - old_J) <= t * const * (np.sum(gradient_J * D)):
-            finis = False
+            finis = True
         else:
             t *= gamma
         iterations -= 1
-    # print(f"Value of the step length: {t}")toys2c2
+    # print(f"Value of the step length: {t}")
     return new_W
 
 
@@ -160,7 +160,7 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, i
 
         # Check stopping condition
         variance = np.abs(old_j1 - new_j1)
-        if variance <= stopping_threshold:
+        if variance <= 1e-6:
             start_W = W
             break
         else:
@@ -170,7 +170,7 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, i
 
 
 def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
-         epsi=1e-3, init="kmeans", disp=True):
+         epsi=1e-3, stopping_factor=None, init="kmeans", disp=True):
     """
     Weighted Evidential c-means algorithm. `ecm` Computes a credal partition from a matrix of attribute data using
     the Evidential c-means (ECM) algorithm with the addition of weights for dimensions.
@@ -215,7 +215,10 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
         Initialization: "kmeans" (default) or "rand" (random).
     disp (bool):
         If True (default), intermediate results are displayed.
-
+    stopping_factor(str):
+        default: the change of Objective Function smaller than epsi
+        "weight": the change of weights smaller than epsi
+        "center": the change of centers smaller than epsi
     Returns:
     --------
     The credal partition (an object of class "credpart").
@@ -287,6 +290,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
 
         iter = 0
         while pasfini:
+            start_g = g
             iter += 1
             start_W = W
             # Calculate weights of focal sets ((2^c -1) x d)
@@ -376,7 +380,16 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
 
             if disp:
                 print([iter, J])
-            pasfini = (np.abs(J - Jold) > epsi)
+
+            weights_change = np.abs(np.linalg.norm(W) - np.linalg.norm(start_W))
+            centers_change = np.abs(np.linalg.norm(g) - np.linalg.norm(start_g))
+            J_change = np.abs(J - Jold)
+            if stopping_factor == "weight":
+                pasfini = weights_change > epsi
+            elif stopping_factor == "center":
+                pasfini = centers_change > epsi
+            else:
+                pasfini = J_change > epsi
             Jold = J
 
         if J < Jbest:

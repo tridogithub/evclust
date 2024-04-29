@@ -100,7 +100,8 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     e_norm2 = np.linalg.norm(e) ** 2
     P = np.identity(d) - (1 / e_norm2) * np.dot(e, e.transpose())
 
-    D = -np.transpose(np.dot(P, np.transpose(old_W)))  # dk = -P.wk
+    gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
+    D = -np.transpose(np.dot(P, np.transpose(gradient_J)))  # dk = -P.wk
 
     finis = True
     gamma = 0.1  # constant
@@ -109,7 +110,6 @@ def finding_new_weights(old_W, M, V, F, X, alpha, beta, delta):
     iterations = 50
     new_W = None
     old_J = get_j1_objective_func_value(old_W, M, V, F, X, alpha, beta, delta)
-    gradient_J = get_gradient_matrix(old_W, M, V, F, X, alpha, beta)
     # finding the step length t in {1, gamma^1, gamma^2, ...}
     while finis:
         new_W = old_W + t * D
@@ -177,7 +177,7 @@ def generate_initial_credal_matrix(n, c):
     return m[:, :-1]
 
 def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, alpha=1, beta=2, delta=10,
-         epsi=1e-3, init="kmeans", disp=True):
+         epsi=1e-3, stopping_factor=None, init="kmeans", disp=True):
     """
     Weighted Evidential c-means algorithm. `ecm` Computes a credal partition from a matrix of attribute data using
     the Evidential c-means (ECM) algorithm with the addition of weights for dimensions.
@@ -222,7 +222,10 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
         Initialization: "kmeans" (default) or "rand" (random).
     disp (bool):
         If True (default), intermediate results are displayed.
-
+    stopping_factor(str):
+        default: the change of Objective Function smaller than epsi
+        "mass": the change of mass values smaller than epsi
+        "center": the change of centers smaller than epsi
     Returns:
     --------
     The credal partition (an object of class "credpart").
@@ -278,6 +281,7 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
         gplus = np.zeros((f - 1, d))
         iter = 0
         while pasfini:
+            start_m = m
             iter += 1
             start_W = W
             # Calculate weights of focal sets ((2^c -1) x d)
@@ -368,7 +372,16 @@ def wecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1, 
 
             if disp:
                 print([iter, J])
-            pasfini = (np.abs(J - Jold) > epsi)
+
+            weights_change = np.abs(np.linalg.norm(W) - np.linalg.norm(start_W))
+            mass_change = np.abs(np.linalg.norm(next_m) - np.linalg.norm(start_m))
+            J_change = np.abs(J - Jold)
+            if stopping_factor == "weight":
+                pasfini = weights_change > epsi
+            elif stopping_factor == "mass":
+                pasfini = mass_change > epsi
+            else:
+                pasfini = J_change > epsi
             Jold = J
             m = next_m
 
