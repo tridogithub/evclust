@@ -216,6 +216,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
         gplus = np.zeros((f - 1, d))
         iter = 0
         while pasfini:
+            old_g = g
             iter += 1
             start_W = W
             # Calculate weights of focal sets ((2^c -1) x d)
@@ -306,7 +307,10 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
 
             if disp:
                 print([iter, J])
-            pasfini = (np.abs(J - Jold) > epsi)
+            # weights_change = np.abs(np.linalg.norm(W) - np.linalg.norm(start_W))
+            centers_change = np.abs(np.linalg.norm(g) - np.linalg.norm(old_g))
+            pasfini = centers_change > epsi
+            # pasfini = (np.abs(J - Jold) > epsi)
             Jold = J
 
         if J < Jbest:
