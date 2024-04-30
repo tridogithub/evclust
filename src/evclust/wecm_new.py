@@ -160,7 +160,7 @@ def projected_gradient_descent_method(start_W, M, V, F, X, alpha, beta, delta, i
 
         # Check stopping condition
         variance = np.abs(old_j1 - new_j1)
-        if variance <= 1e-6:
+        if variance <= stopping_threshold:
             start_W = W
             break
         else:
