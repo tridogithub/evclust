@@ -1063,13 +1063,15 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     label_column_nm = y.columns[0]
     labels_encoder = LabelEncoder()
     numeric_labels = labels_encoder.fit_transform(y[label_column_nm])
-    marker_list = [markers[i] for i in numeric_labels]
 
     # Scatter matrix plot
     if matrix_plot:
         df = pd.concat([X, y], axis=1)
         df.columns = list(df.columns[:-1]) + ['class']
-        sns.pairplot(df, corner=True, hue='class', markers=markers)
+        if markers is not None:
+            sns.pairplot(df, corner=True, hue='class', markers=markers)
+        else:
+            sns.pairplot(df, corner=True, hue='class')
 
     # Perform PCA for dimensionality reduction
     pca = PCA(n_components=2)  # Reduce to 2 dimensions
@@ -1081,8 +1083,13 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     colors = [mcolors.to_rgba('C{}'.format(i)) for i in numeric_labels]
 
     plt.figure(figsize=(8, 6))
-    for i in range(data_reduced.shape[0]):
-        plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=marker_list[i])
+    if markers is not None:
+        for i in range(data_reduced.shape[0]):
+            marker_list = [markers[i] for i in numeric_labels]
+            plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=marker_list[i])
+    else:
+        for i in range(data_reduced.shape[0]):
+            plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i])
     plt.title(f"{ds_name} - 2D Plot of the Dataset after PCA")
     plt.xlabel(f"Principal Component 1 ({variance_percent[0]}%)")
     plt.ylabel(f"Principal Component 2 ({variance_percent[1]}%)")
