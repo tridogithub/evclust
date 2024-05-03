@@ -69,7 +69,7 @@ def get_j1_objective_func_value(W, M, V, F, X, alpha, beta, delta, noise_w):
     # Calculate objective function's new value
     mvide = 1 - np.sum(M, axis=1)
 
-    j1 = np.nansum((M ** beta) * DW[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + (np.sum(noise_w, axis=0)) * (
+    j1 = np.nansum((M ** beta) * DW[:, :f - 1] * np.tile(card[:f - 1] ** alpha, (n, 1))) + (np.sum(noise_w**2, axis=0)) * (
                 delta ** 2) * np.nansum(mvide[:f - 1] ** beta)
     return j1
 
@@ -261,7 +261,7 @@ def fwecm(x, c, g0=None, W=None, type='full', pairs=None, Omega=True, ntrials=1,
                     vect2 = np.tile(card[j] ** (alpha / (beta - 1)), f - 1) / (card ** (alpha / (beta - 1)))
                     vect3 = vect1 * vect2
                     m[i, j] = 1 / (
-                            np.sum(vect3) + (card[j] ** alpha * DW[i, j] / (np.sum(noise_w, axis=0) * delta2)) ** (
+                            np.sum(vect3) + (card[j] ** alpha * DW[i, j] / (np.sum(noise_w**2, axis=0) * delta2)) ** (
                             1 / (beta - 1)))
                     if np.isnan(m[i, j]):
                         m[i, j] = 1  # in case the initial prototypes are training vectors
