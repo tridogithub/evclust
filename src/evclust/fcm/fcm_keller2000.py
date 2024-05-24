@@ -123,7 +123,7 @@ def fcm(x, c, w0=None, beta=2, alpha=2, epsilon=1e-3, init="kmeans", stop_factor
 
             w[j, :] = 1 / (tmp3 * np.tile(tmp5, (1, d)))
 
-        j = calculate_objective_func(x, v, m, w, beta, alpha)
+        j = calculate_objective_func(x, v, m, w, alpha, beta)
 
         j_change = np.abs(j - j_old)
         v_change = np.linalg.norm(v - v0)
