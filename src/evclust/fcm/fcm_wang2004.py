@@ -6,21 +6,75 @@ import numpy as np
 from scipy.cluster.vq import kmeans
 
 
-def computing_weights_by_evaluation_func(x):
-    epsilon = 1e-6
+# ---------------- (Start) Functions for calculating new weights ---------------------------
+def get_new_weights(w0, x, w_beta):
+    n = x.shape[0]
+    d = w0.shape[0]
+    learning_rate = 0.1
+
+    distance = np.zeros((n, n))
+    w_distances = np.zeros((n, n))
+    pij = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            distance[i, j] = np.linalg.norm(x[i] - x[j])
+            w_distances[i, j] = np.linalg.norm(x[i] * w0 - x[j] * w0)
+            pij[i, j] = 1 / (1 - w_beta * distance[i, j])
+
+    new_w = np.zeros(d)
+    for p in range(d):
+        sum_p = 0
+        for i in range(n):
+            for j in range(i):
+                sum_p += (1 - 2 * pij[i, j]) * (-w_beta * w0[p] * (x[i, p] - x[j, p]) ** 2) / (
+                        w_distances[i, j] * ((1 + w_beta * w_distances[i, j]) ** 2))
+        delta_w_p = - learning_rate * sum_p * 1 / (n * (n - 1))
+        new_w[p] = w0[p] + delta_w_p
+
+    return new_w
+
+
+def calculate_evaluation_func(x, w, w_beta):
     n = x.shape[0]
 
     # Calculate distance between data points
     distance = np.zeros((n, n))
+    w_distances = np.zeros((n, n))
+    pij = np.zeros((n, n))
+    w_pij = np.zeros((n, n))
+    e_func = 0
     for i in range(n):
-        for j in range(n):
+        for j in range(i):
             distance[i, j] = np.linalg.norm(x[i] - x[j])
+            w_distances[i, j] = np.linalg.norm(x[i] * w - x[j] * w)
+            pij[i, j] = 1 / (1 - w_beta * distance[i, j])
+            w_pij[i, j] = 1 / (1 - w_beta * w_distances[i, j])
+            e_func += (1 / 2) * (w_pij[i, j] * (1 - pij[i, j]) - pij[i, j] * (1 - w_pij[i, j]))
+    e_func = e_func * (2 / (n * (n - 1)))
 
+    return e_func
+
+
+def computing_weights_by_minimizing_evaluation_func(x, w_beta):
+    epsilon = 1e-5
+
+    d = x.shape[1]
+
+    w0 = np.ones(d)
+    w = np.zeros(d)
     finis = False
     while not finis:
+        e0 = calculate_evaluation_func(x, w0, w_beta)
+        w = get_new_weights(w0, x, w_beta)
+        e = calculate_evaluation_func(x, w, w_beta)
 
-    return None
+        e_change = np.abs(e - e0)
+        finis = e_change < epsilon
+        w0 = w
+    return w
 
+
+# ---------------- (END) Functions for calculating new weights ---------------------------
 
 def calculate_objective_func(x, v, m, w, beta):
     """
@@ -46,12 +100,13 @@ def calculate_objective_func(x, v, m, w, beta):
     return j
 
 
-def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=False):
+def fcm(x, c, w_beta, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=False):
     """
 
     Args:
         x:
         c:
+        w_beta: parameter for initializing weights
         beta:
         epsilon:
         init:
@@ -78,13 +133,14 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
         print(f"Initial centers: {v0}")
 
     # Initialize weight matrix
-    w0 = computing_weights_by_evaluation_func()
+    w0 = computing_weights_by_minimizing_evaluation_func(x, w_beta)
 
     j_old = np.inf
     finis = False
     v = None
     m = None
     iters = 0
+    j = None
     while not finis:
         # Distance to centers (n x c)
         d2 = np.zeros((n, c))
