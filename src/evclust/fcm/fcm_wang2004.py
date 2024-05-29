@@ -4,13 +4,13 @@
 
 import numpy as np
 from scipy.cluster.vq import kmeans
+import math
 
 
 # ---------------- (Start) Functions for calculating new weights ---------------------------
-def get_new_weights(w0, x, w_beta):
+def get_new_weights(w0, x, w_beta, learning_rate):
     n = x.shape[0]
     d = w0.shape[0]
-    learning_rate = 0.1
 
     distance = np.zeros((n, n))
     w_distances = np.zeros((n, n))
@@ -19,15 +19,17 @@ def get_new_weights(w0, x, w_beta):
         for j in range(n):
             distance[i, j] = np.linalg.norm(x[i] - x[j])
             w_distances[i, j] = np.linalg.norm(x[i] * w0 - x[j] * w0)
-            pij[i, j] = 1 / (1 - w_beta * distance[i, j])
+            pij[i, j] = 1 / (1 + w_beta * distance[i, j])
 
     new_w = np.zeros(d)
     for p in range(d):
         sum_p = 0
         for i in range(n):
             for j in range(i):
-                sum_p += (1 - 2 * pij[i, j]) * (-w_beta * w0[p] * (x[i, p] - x[j, p]) ** 2) / (
-                        w_distances[i, j] * ((1 + w_beta * w_distances[i, j]) ** 2))
+                tmp1 = (1 - 2 * pij[i, j]) * (-w_beta * w0[p] * (x[i, p] - x[j, p]) ** 2)
+                tmp2 = (w_distances[i, j] * ((1 + w_beta * w_distances[i, j]) ** 2))
+                if tmp1 != 0 and tmp2 != 0:
+                    sum_p += tmp1 / tmp2
         delta_w_p = - learning_rate * sum_p * 1 / (n * (n - 1))
         new_w[p] = w0[p] + delta_w_p
 
@@ -47,8 +49,8 @@ def calculate_evaluation_func(x, w, w_beta):
         for j in range(i):
             distance[i, j] = np.linalg.norm(x[i] - x[j])
             w_distances[i, j] = np.linalg.norm(x[i] * w - x[j] * w)
-            pij[i, j] = 1 / (1 - w_beta * distance[i, j])
-            w_pij[i, j] = 1 / (1 - w_beta * w_distances[i, j])
+            pij[i, j] = 1 / (1 + w_beta * distance[i, j])
+            w_pij[i, j] = 1 / (1 + w_beta * w_distances[i, j])
             e_func += (1 / 2) * (w_pij[i, j] * (1 - pij[i, j]) - pij[i, j] * (1 - w_pij[i, j]))
     e_func = e_func * (2 / (n * (n - 1)))
 
@@ -56,21 +58,27 @@ def calculate_evaluation_func(x, w, w_beta):
 
 
 def computing_weights_by_minimizing_evaluation_func(x, w_beta):
-    epsilon = 1e-5
+    epsilon = 1e-4
+    learning_rate = 0.3
 
     d = x.shape[1]
 
-    w0 = np.ones(d)
+    w0 = np.ones(d) / d
+    print(f"Initial weights: {w0}")
     w = np.zeros(d)
     finis = False
-    while not finis:
+    iteration = 0
+    while not finis and iteration <= 200:
         e0 = calculate_evaluation_func(x, w0, w_beta)
-        w = get_new_weights(w0, x, w_beta)
+        w = get_new_weights(w0, x, w_beta, learning_rate)
         e = calculate_evaluation_func(x, w, w_beta)
 
         e_change = np.abs(e - e0)
         finis = e_change < epsilon
         w0 = w
+        iteration += 1
+        # print(f"[{iteration}, {e}]]")
+    print(f"Final initial weights: {w}")
     return w
 
 
@@ -81,10 +89,9 @@ def calculate_objective_func(x, v, m, w, beta):
     Calculate the objective function value
     Args:
         w: weight matrix
-        m: membership matrix
+        m: membership matrix (n x c)
         v: centers
         x: data
-        alpha: the influence of weights
         beta: the fuzzifier pf membership value
     """
     # weighted distance to centers (n x d)
@@ -92,7 +99,7 @@ def calculate_objective_func(x, v, m, w, beta):
     c = v.shape[0]
     d2w = np.zeros((n, c))
     for j in range(c):
-        weights = np.tile(w[j, :], (n, 1)) ** 2
+        weights = np.tile(w[j], (n, 1)) ** 2
         d2w[:, j] = np.nansum(((x - np.tile(v[j, :], (n, 1))) ** 2) * weights, axis=1)
 
     tmp1 = (m ** beta) * d2w
@@ -104,17 +111,17 @@ def fcm(x, c, w_beta, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, ver
     """
 
     Args:
-        x:
-        c:
+        x: data set
+        c: number of clusters
         w_beta: parameter for initializing weights
-        beta:
-        epsilon:
-        init:
-        stop_factor:
-        verbose:
+        beta: the fuzzifier pf membership value
+        epsilon: the stopping condition
+        init: the initialization of centers. 'kmeans' - default. 'None' - randomly
+        stop_factor: "center" for center change, None for objective function change
+        verbose: display debugging messages
 
     Returns:
-
+        A fuzzy partition matrix indicating membership values of objects to each cluster
     """
     if verbose:
         print(f"Dataset includes {x.shape[0]} instances, and {x.shape[1]} features")
@@ -142,15 +149,10 @@ def fcm(x, c, w_beta, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, ver
     iters = 0
     j = None
     while not finis:
-        # Distance to centers (n x c)
-        d2 = np.zeros((n, c))
-        for j in range(c):
-            d2[:, j] = np.nansum((x - np.tile(v0[j, :], (n, 1))) ** 2, axis=1)
-
         # weighted distance to centers (n x c)
         d2w = np.zeros((n, c))
         for j in range(c):
-            weights = np.tile(w0[j, :], (n, 1)) ** 2
+            weights = np.tile(w0, (n, 1)) ** 2
             d2w[:, j] = np.nansum(((x - np.tile(v0[j, :], (n, 1))) ** 2) * weights, axis=1)
 
         # Calculate the next membership matrix
