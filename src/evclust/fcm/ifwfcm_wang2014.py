@@ -111,16 +111,6 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
         tmp1 = np.nansum(1 / w)
         w = 1 / (w * tmp1)
 
-        # for j in range(c):
-        #     tmp1 = np.tile(v[j, :], (n, 1))
-        #     tmp2 = (np.tile(m[:, j].reshape(-1, 1), (1, d)) ** beta) * ((x - tmp1) ** 2)
-        #     tmp3 = np.nansum(tmp2, axis=0) ** (1 / (alpha - 1))
-        #
-        #     tmp4 = (1 / np.nansum(tmp2, axis=0)) ** (1 / (alpha - 1))
-        #     tmp5 = np.nansum(tmp4)
-        #
-        #     w[j, :] = 1 / (tmp3 * np.tile(tmp5, (1, d)))
-
         j = calculate_objective_func(x, v, m, w, beta)
 
         j_change = np.abs(j - j_old)
