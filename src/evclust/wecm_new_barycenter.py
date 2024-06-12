@@ -30,8 +30,8 @@ def __get_objective_func_value(w, m, v, F, x, alpha, beta, delta):
     # Calculate weighted distances
     dw2 = np.zeros((n, f - 1))
     for j in range(f - 1):
-        wj2 = np.tile(w[j, :], (n, 1)) ** 2  # Weight of each dimension wrt cluster j, repeated n times
-        dw2[:, j] = np.nansum((x - np.tile(vplus[j, :], (n, 1))) ** 2 * wj2, axis=1)
+        wj = np.tile(w[j, :], (n, 1))  # Weight of each dimension wrt cluster j, repeated n times
+        dw2[:, j] = np.nansum(((x - np.tile(vplus[j, :], (n, 1))) * wj) ** 2, axis=1)
 
     # Calculate objective function's new value
     mvide = 1 - np.sum(m, axis=1)
@@ -119,8 +119,8 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         # Calculate weighted distances
         dw2 = np.zeros((n, f - 1))
         for j in range(f - 1):
-            wj2 = np.tile(w0[j, :], (n, 1)) ** 2  # Weight of each dimension wrt cluster j, repeated n times
-            dw2[:, j] = np.nansum((x - np.tile(vplus[j, :], (n, 1))) ** 2 * wj2, axis=1)
+            wj = np.tile(w0[j, :], (n, 1))  # Weight of each dimension wrt cluster j, repeated n times
+            dw2[:, j] = np.nansum(((x - np.tile(vplus[j, :], (n, 1)))  * wj) ** 2, axis=1)
 
         # Update memberships
         m = np.zeros((n, f - 1))
@@ -145,6 +145,7 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
             tmp4 = (1 / np.nansum(tmp2, axis=0))
             tmp5 = np.tile(np.sum(tmp4), (1, d))
             w[j, :] = 1 / (tmp3 * tmp5)
+        # print(f"Weights: {w}")
 
         # Update centers
         v = np.zeros((c, d))
@@ -159,14 +160,17 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
                         0]  # indices of all Aj including wk and wl
                     indices = indices - 1
 
-                    for j in indices:
-                        aj = card[j] ** alpha
-                        mj_beta = m[:, j] ** beta
-                        singleton_index = np.where(F[j + 1, :] == 1)[0]
-                        w2_sum = np.sum(w0[singleton_index, p] ** 2, axis=0)
-                        tmp1 = (w0[k, p] * w0[l, p] / w2_sum) ** 2
-                        tmp2 = aj * (w0[j, p] ** 2) * tmp1 * mj_beta
-                        H[k, l] += np.nansum(tmp2)
+                    if len(indices) == 0:
+                        H[l, k] = 0
+                    else:
+                        for j in indices:
+                            aj = card[j] ** alpha
+                            mj_beta = m[:, j] ** beta
+                            singleton_index = np.where(F[j + 1, :] == 1)[0]
+                            w2_sum = np.sum(w0k[singleton_index, p] ** 2, axis=0)
+                            tmp1 = (w0k[k, p] * w0k[l, p] / w2_sum) ** 2
+                            tmp2 = aj * (w0[j, p] ** 2) * tmp1 * np.sum(mj_beta)
+                            H[l, k] += tmp2
 
             B = np.zeros((c, 1))
             for k in range(c):
@@ -181,20 +185,21 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
                     aj = card[j] ** alpha
                     mj_beta = m[:, j] ** beta
                     singleton_index = np.where(F[j + 1, :] == 1)[0]
-                    w2_sum = np.sum(w0[singleton_index, p] ** 2, axis=0)
-                    tmp1 = ((w0[k, p]) ** 2) / w2_sum
+                    w2_sum = np.sum(w0k[singleton_index, p] ** 2, axis=0)
+                    tmp1 = ((w0k[k, p]) ** 2) / w2_sum
                     tmp2 = aj * mj_beta * (w0[j, p] ** 2) * tmp1 * x[:, p]
-                    B[k] += np.nansum(tmp2)
+                    B[k, 0] += np.nansum(tmp2)
             vp = np.linalg.solve(H, B)
             v[:, p] = vp.transpose()
+        # print(f"Centers: {v}")
 
         J = __get_objective_func_value(w, m, v, F, x, alpha, beta, delta)
         iteration += 1
         if disp:
             print([iteration, J])
 
-        weights_change = np.abs(np.linalg.norm(w) - np.linalg.norm(w0))
-        centers_change = np.abs(np.linalg.norm(v) - np.linalg.norm(v0))
+        weights_change = np.abs(np.linalg.norm(w - w0))
+        centers_change = np.abs(np.linalg.norm(v - v0))
 
         J_change = np.abs(J - j_old)
         if stopping_factor == "weight":
