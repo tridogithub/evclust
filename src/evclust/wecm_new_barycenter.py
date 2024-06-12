@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Van Tri DO (van_tri.do@etu.uca.fr) - France, 2024
 """
 This module contains the main function for w-ecm (Weighted ECM clustering) with new equation of barycenters
 """
@@ -41,6 +42,35 @@ def __get_objective_func_value(w, m, v, F, x, alpha, beta, delta):
 
 
 def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor=None, init="kmeans", disp=True):
+    """
+    Evidential C-means clustering with new equation of bary-centers, and feature-weight integration
+    Args:
+        x:
+            Input matrix of size n x d, where n is the number of objects and d is the number of attributes.
+        c:
+            Number of clusters.
+        v0:
+            Initial prototypes, matrix of size (c x d). If not provided, the prototypes are initialized according to 'init'.
+        alpha:
+            Exponent of the cardinality in the cost function.
+        beta:
+            Exponent of masses in the cost function.
+        delta:
+            Distance to the empty set.
+        epsilon:
+            Minimum amount of improvement.
+        stopping_factor:
+            default: the change of Objective Function smaller than epsilon
+            "weight": the change of weights smaller than epsilon
+            "center": the change of centers smaller than epsilon
+        init:
+            Initialization: "kmeans" (default). "None" is for random initializaion
+        disp:
+            If True (default), intermediate results are displayed.
+
+    Returns: The credal partition
+
+    """
     # ------------ Initialization -------------
     x = np.array(x)
     n = x.shape[0]
@@ -179,6 +209,6 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         w0 = w
 
     m = np.concatenate((1 - np.sum(m, axis=1).reshape(n, 1), m), axis=1)
-    clus = extractMass(m, F, g=v, W=w, method="fw-ecm", crit=J,
+    clus = extractMass(m, F, g=v, W=w, method="wecm", crit=J,
                        param={'alpha': alpha, 'beta': beta, 'delta': delta})
     return clus
