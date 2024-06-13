@@ -3,7 +3,7 @@
 
 """
     This module contains functions to run weighted Fuzzy C-means algorithm specified in the paper:
-    Further improvements in Feature-Weighted Fuzzy C-Means - Wang 2000 et al.
+    Further improvements in Feature-Weighted Fuzzy C-Means - Xing 2014 et al.
     (doi.org/10.1016/j.ins.2014.01.033)
 """
 
@@ -25,11 +25,17 @@ def calculate_objective_func(x, v, m, w, beta):
     # weighted distance to centers (n x d)
     n = x.shape[0]
     c = v.shape[0]
-    d2w = np.zeros((n, c))
+    # Calculate kernel function's values matrix
+    variance = np.var(x.flatten())  # square of standard deviation
+    k = np.zeros((n, c))
     for j in range(c):
-        weights = np.tile(w, (n, 1))
-        xv_ij = x - np.tile(v[j, :], (n, 1))
-        d2w[:, j] = np.nansum((xv_ij * weights) ** 2, axis=1)
+        vjw = np.tile(v[j, :] * w, (n, 1))
+        xw = x * np.tile(w, (n, 1))
+        tmp1 = - np.nansum((xw - vjw) ** 2, axis=1) / (2 * variance)
+        k[:, j] = np.exp(tmp1)
+
+    # weighted distance to centers (n x c)
+    d2w = 2 - 2 * k
 
     tmp1 = (m ** beta) * d2w
     j = np.sum(tmp1)
@@ -79,12 +85,17 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
     w = None
     iteration = 0
     while not finis:
-        # weighted distance to centers (n x c)
-        d2w = np.zeros((n, c))
+        # Calculate kernel function's values matrix
+        variance = np.var(x.flatten())  # square of standard deviation
+        k = np.zeros((n, c))
         for j in range(c):
-            weights = np.tile(w0, (n, 1))
-            xv_ij = x - np.tile(v0[j, :], (n, 1))
-            d2w[:, j] = np.nansum((xv_ij * weights) ** 2, axis=1)
+            vjw = np.tile(v0[j, :] * w0, (n, 1))
+            xw = x * np.tile(w0, (n, 1))
+            tmp1 = - np.nansum((xw - vjw) ** 2, axis=1) / (2 * variance)
+            k[:, j] = np.exp(tmp1)
+
+        # weighted distance to centers (n x c)
+        d2w = 1 - 2 * k + 1
 
         # Calculate the next membership matrix
         tmp = 1 / (d2w ** (1 / (beta - 1)))
@@ -96,9 +107,9 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
         # Calculating new centers
         v = np.zeros((c, d))
         for p in range(d):
-            tmp1 = np.nansum(m ** beta, axis=0)
+            tmp1 = np.nansum((m ** beta) * k, axis=0)
             tmp2 = np.tile(x[:, p].reshape(-1, 1), c)
-            tmp3 = np.nansum((m ** beta) * tmp2, axis=0)
+            tmp3 = np.nansum((m ** beta) * k * tmp2, axis=0)
             tmp4 = tmp3 / tmp1
             v[:, p] = tmp4
 
@@ -107,7 +118,7 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
         for p in range(d):
             xp = np.tile(x[:, p].reshape(-1, 1), c)
             vp = np.tile(v[:, p], (n, 1))
-            w[p] = np.nansum(m * ((xp - vp) ** 2))
+            w[p] = np.nansum(m * k * ((xp - vp) ** 2))
         tmp1 = np.nansum(1 / w)
         w = 1 / (w * tmp1)
 
