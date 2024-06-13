@@ -42,7 +42,7 @@ def fcm(x, c, w0=None, beta=2, alpha=2, epsilon=1e-3, init="kmeans", stop_factor
     Args:
         x: data set
         c: number of clusters
-        w: initial weights, If None, the algorithm randomly generate
+        w: initial weights, If None, the algorithm randomly generate (c x d)
         beta: the fuzzifier pf membership value
         alpha: the influence of weights
         epsilon: the stopping condition
@@ -70,7 +70,7 @@ def fcm(x, c, w0=None, beta=2, alpha=2, epsilon=1e-3, init="kmeans", stop_factor
 
     # Initialize weight matrix
     if w0 is not None:
-        if w0.shape[0] != n or w0.shape[1] != d:
+        if w0.shape[0] != c or w0.shape[1] != d:
             raise ValueError("Invalid size of initial weight matrix.")
     else:
         w0 = np.random.dirichlet(np.ones(d), c)

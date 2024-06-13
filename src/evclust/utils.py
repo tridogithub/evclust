@@ -6,15 +6,17 @@
 This module contains the utils function 
 """
 
+from itertools import combinations
+
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 # ---------------------- Packges------------------------------------------------
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-from scipy.spatial import ConvexHull
-from itertools import combinations
 import seaborn as sns
+from scipy.spatial import ConvexHull
 from sklearn.decomposition import PCA
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -1049,7 +1051,7 @@ def calculate_non_specificity(cluster_model, verbose=True):
 
 def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     """
-    Plotting the dataset in PCA and maxtrix plot.
+    Plotting the dataset in PCA and matrix plot.
     Args:
         X: DataFrame containing dataset
         y: DataFrame containing labels
@@ -1096,3 +1098,58 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     plt.legend()
     plt.grid(True)
     plt.show()
+
+
+def fcm_pca_plot(x, model, cex=25):
+    pca = PCA(n_components=2)
+    x = pd.DataFrame(pca.fit_transform(x))
+    variance_percent = np.round(pca.explained_variance_ratio_ * 100, 1)
+
+    fuzzy_part = model['fuzzy_part']  # (n x c)
+    labels = np.argmax(fuzzy_part, axis=1)  # (n x 1)
+    label_num = len(np.unique(labels))
+    markers = list(plt.Line2D.markers.keys())[:label_num]
+
+    marker_list = [markers[i] for i in labels]
+    colors = [mcolors.to_rgba('C{}'.format(i)) for i in labels]
+    for i in range(x.shape[0]):
+        plt.scatter(x.iloc[i, 0], x.iloc[i, 1], c=colors[i], s=cex, marker=marker_list[i])
+
+    plt.xlabel(f"Principal Component 1 ({variance_percent[0]}%)")
+    plt.ylabel(f"Principal Component 2 ({variance_percent[1]}%)")
+    plt.tight_layout()
+    plt.show()
+
+
+def display_results_evidential(x, models, true_labels, cex=25):
+    predicted_labels_list = list(map(lambda model: np.argmax(model['betp'], axis=1), models))
+    # ARIs
+    ari_list = [adjusted_rand_score(true_labels, predicted_labels) for predicted_labels in predicted_labels_list]
+    # Non-specificity values of top 10
+    top_NS = [calculate_non_specificity(model, verbose=False) for model in models]
+    # Normalize mutual infor scores
+    NMIs = [normalized_mutual_info_score(true_labels, predicted_labels) for predicted_labels in predicted_labels_list]
+
+    print(f"J values: {[x['crit'] for x in models]}")
+    print(f"ARI values: {ari_list}")
+    print(f"NS values: {top_NS}")
+    print(f"NMI values: {NMIs}")
+
+    # Plotting the model with the minimum J value
+    ev_plot(models[0], X=x, cex=cex)
+    ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex)
+    ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex, splite=True)
+
+
+def display_results_fuzzy_partition(x, models, true_labels, cex=25):
+    predicted_labels_list = list(map(lambda model: np.argmax(model['fuzzy_part'], axis=1), models))
+    # ARIs
+    ari_list = [adjusted_rand_score(true_labels, predicted_labels) for predicted_labels in predicted_labels_list]
+    # Normalize mutual infor scores
+    NMIs = [normalized_mutual_info_score(true_labels, predicted_labels) for predicted_labels in predicted_labels_list]
+
+    print(f"J values: {[x['obj_func'] for x in models]}")
+    print(f"ARI values: {ari_list}")
+    print(f"NMI values: {NMIs}")
+
+    fcm_pca_plot(x, models[0], cex)
