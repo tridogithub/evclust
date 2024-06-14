@@ -58,7 +58,7 @@ def calculate_evaluation_func(x, w, w_beta):
 
 
 def computing_weights_by_minimizing_evaluation_func(x, w_beta):
-    epsilon = 1e-4
+    epsilon = 1e-3
     learning_rate = 0.3
 
     d = x.shape[1]
@@ -68,7 +68,7 @@ def computing_weights_by_minimizing_evaluation_func(x, w_beta):
     w = np.zeros(d)
     finis = False
     iteration = 0
-    while not finis and iteration <= 200:
+    while not finis and iteration <= 100:
         e0 = calculate_evaluation_func(x, w0, w_beta)
         w = get_new_weights(w0, x, w_beta, learning_rate)
         e = calculate_evaluation_func(x, w, w_beta)
@@ -77,7 +77,7 @@ def computing_weights_by_minimizing_evaluation_func(x, w_beta):
         finis = e_change < epsilon
         w0 = w
         iteration += 1
-        # print(f"[{iteration}, {e}]]")
+        print(f"[{iteration}, {e}]]")
     print(f"Final initial weights: {w}")
     return w
 
