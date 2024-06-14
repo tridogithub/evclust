@@ -99,7 +99,7 @@ def calculate_objective_func(x, v, m, w, beta):
     c = v.shape[0]
     d2w = np.zeros((n, c))
     for j in range(c):
-        weights = np.tile(w[j], (n, 1)) ** 2
+        weights = np.tile(w, (n, 1)) ** 2
         d2w[:, j] = np.nansum(((x - np.tile(v[j, :], (n, 1))) ** 2) * weights, axis=1)
 
     tmp1 = (m ** beta) * d2w

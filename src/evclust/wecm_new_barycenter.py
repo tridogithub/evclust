@@ -9,6 +9,14 @@ from evclust.utils import makeF, extractMass
 import numpy as np
 from scipy.cluster.vq import kmeans
 
+def __calcualte_barycenters(v, w, f, d, F, w0k2):
+    vplus = np.zeros((f - 1, d))
+    # Calculate (2^c - 1) centroids vplus
+    for i in range(1, f):
+        fi = F[i, :]
+        truc = np.tile(fi, (d, 1)).T
+        vplus[i - 1, :] = np.sum(v * w0k2 * truc, axis=0) / np.sum(w0k2 * truc, axis=0)
+    return vplus
 
 def __get_objective_func_value(w, m, v, F, x, alpha, beta, delta):
     n = m.shape[0]
@@ -101,6 +109,7 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
     v = None
     w = None
     m = None
+    vplus = None
     j_old = np.inf
     J = None
     iteration = 0
@@ -109,12 +118,8 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         w0k = w0[card == 1]  # (c x d)
         w0k2 = w0k ** 2
 
-        vplus = np.zeros((f - 1, d))
-        # Calculate (2^c - 1) centroids vplus
-        for i in range(1, f):
-            fi = F[i, :]
-            truc = np.tile(fi, (d, 1)).T
-            vplus[i - 1, :] = np.sum(v0 * w0k2 * truc, axis=0) / np.sum(w0k2 * truc, axis=0)
+        if vplus is None:
+            vplus = __calcualte_barycenters(v0, w0, f, d, F, w0k2)
 
         # Calculate weighted distances
         dw2 = np.zeros((n, f - 1))
@@ -191,7 +196,7 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
                     B[k, 0] += np.nansum(tmp2)
             vp = np.linalg.solve(H, B)
             v[:, p] = vp.transpose()
-        # print(f"Centers: {v}")
+        vplus = __calcualte_barycenters(v, w, f, d, F, w0k2)
 
         J = __get_objective_func_value(w, m, v, F, x, alpha, beta, delta)
         iteration += 1
@@ -214,6 +219,6 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         w0 = w
 
     m = np.concatenate((1 - np.sum(m, axis=1).reshape(n, 1), m), axis=1)
-    clus = extractMass(m, F, g=v, W=w, method="wecm", crit=J,
+    clus = extractMass(m, F, g=v, gplus=vplus, W=w, method="wecm", crit=J,
                        param={'alpha': alpha, 'beta': beta, 'delta': delta})
     return clus

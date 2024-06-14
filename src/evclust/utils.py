@@ -93,7 +93,7 @@ def get_ensembles(table):
 
 
 # ---------------------- extractMass--------------------------------------------
-def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trace=None, D=None, W=None, J=None,
+def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trace=None, D=None, W=None, gplus=None, J=None,
                 param=None):
     """
     Creates an object of class "credpart". `extractMass` computes different outputs (hard, fuzzy, rough partitions, etc.)
@@ -267,7 +267,7 @@ def extractMass(mass, F, g=None, S=None, method=None, crit=None, Kmat=None, trac
             'upper_approx': upper_approx, 'lower_approx': lower_approx, 'Ynd': Ynd,
             'upper_approx_nd': upper_approx_nd, 'lower_approx_nd': lower_approx_nd,
             'N': N, 'outlier': outlier, 'g': g, 'S': S,
-            'crit': crit, 'Kmat': Kmat, 'trace': trace, 'D': D, 'method': method, 'W': W, 'J': J, 'param': param}
+            'crit': crit, 'Kmat': Kmat, 'trace': trace, 'D': D, 'method': method, 'W': W, 'gplus':gplus, 'J': J, 'param': param}
 
     return clus
 
@@ -1138,7 +1138,7 @@ def display_results_evidential(x, models, true_labels, cex=25):
     # Plotting the model with the minimum J value
     ev_plot(models[0], X=x, cex=cex)
     ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex)
-    ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex, splite=True)
+    # ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex, splite=True)
 
 
 def display_results_fuzzy_partition(x, models, true_labels, cex=25):
