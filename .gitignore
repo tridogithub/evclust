@@ -1,2 +1,4 @@
 .idea
 docs/.ipynb_checkpoints
+__pycache__
+src/evclust/__pycache__
