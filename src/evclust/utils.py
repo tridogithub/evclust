@@ -1107,7 +1107,7 @@ def fcm_pca_plot(x, model, cex=25):
 
     fuzzy_part = model['fuzzy_part']  # (n x c)
     labels = np.argmax(fuzzy_part, axis=1)  # (n x 1)
-    label_num = len(np.unique(labels))
+    label_num = fuzzy_part.shape[1]
     markers = list(plt.Line2D.markers.keys())[:label_num]
 
     marker_list = [markers[i] for i in labels]
