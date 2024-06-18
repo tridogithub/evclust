@@ -58,3 +58,6 @@ def load_2d_dataset():
 
 def load_2c6d_dataset():
     return pd.read_csv(DATASETS_DIR / "2c6dDataset.csv", header=None)
+
+def load_crescent2D():
+    return pd.read_csv(DATASETS_DIR / "crescent2D.csv", header=None)
