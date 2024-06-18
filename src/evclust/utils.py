@@ -1085,13 +1085,12 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     colors = [mcolors.to_rgba('C{}'.format(i)) for i in numeric_labels]
 
     plt.figure(figsize=(8, 6))
-    if markers is not None:
-        for i in range(data_reduced.shape[0]):
-            marker_list = [markers[i] for i in numeric_labels]
-            plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=marker_list[i])
-    else:
-        for i in range(data_reduced.shape[0]):
-            plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i])
+    if markers is None:
+        marker_lst = list(plt.Line2D.markers.keys())
+        markers = [marker_lst[i] for i in numeric_labels]
+    for i in range(data_reduced.shape[0]):
+        plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=markers[i])
+
     plt.title(f"{ds_name} - 2D Plot of the Dataset after PCA")
     plt.xlabel(f"Principal Component 1 ({variance_percent[0]}%)")
     plt.ylabel(f"Principal Component 2 ({variance_percent[1]}%)")
