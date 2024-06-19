@@ -69,3 +69,8 @@ def load_toys3c2d():
 
 def load_toys3c2d_2():
     return pd.read_csv(DATASETS_DIR / "toys3c2d_2.csv", header=None)
+
+def load_hayes_roth():
+    return pd.read_csv(DATASETS_DIR / "hayes_roth.csv", header=None)
+
+

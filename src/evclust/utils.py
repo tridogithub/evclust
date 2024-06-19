@@ -1120,7 +1120,7 @@ def fcm_pca_plot(x, model, cex=25):
     plt.show()
 
 
-def display_results_evidential(x, models, true_labels, cex=25):
+def display_results_evidential(x, models, true_labels, cex=25, up_low_appr = True):
     predicted_labels_list = list(map(lambda model: np.argmax(model['betp'], axis=1), models))
     # ARIs
     ari_list = [adjusted_rand_score(true_labels, predicted_labels) for predicted_labels in predicted_labels_list]
@@ -1135,7 +1135,8 @@ def display_results_evidential(x, models, true_labels, cex=25):
     print(f"NMI values: {NMIs}")
 
     # Plotting the model with the minimum J value
-    ev_plot(models[0], X=x, cex=cex)
+    if up_low_appr:
+        ev_plot(models[0], X=x, cex=cex)
     ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex)
     # ev_pcaplot(data=x, x=models[0], normalize=False, cex=cex, splite=True)
 
