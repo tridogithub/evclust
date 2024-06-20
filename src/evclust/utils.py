@@ -1089,6 +1089,8 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     if markers is None:
         marker_lst = list(plt.Line2D.markers.keys())
         markers = [marker_lst[i] for i in numeric_labels]
+    else:
+        markers = [markers[i] for i in numeric_labels]
     for i in range(data_reduced.shape[0]):
         plt.scatter(data_reduced[i, 0], data_reduced[i, 1], alpha=0.5, c=colors[i], marker=markers[i])
 
