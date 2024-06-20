@@ -1081,6 +1081,7 @@ def plotting(X, y, ds_name, matrix_plot=False, markers=None):
     variance_percent = np.round(pca.explained_variance_ratio_ * 100, 1)
 
     # Plot the reduced dataset with different colors for each cluster
+    print(f"Instances {X.shape[0]} - Features {X.shape[1]} - Class {len(np.unique(numeric_labels))}")
     print(X[:5])
     colors = [mcolors.to_rgba('C{}'.format(i)) for i in numeric_labels]
 
