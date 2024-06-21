@@ -86,3 +86,6 @@ def load_bupa():
 
 def load_diapetes():
     return pd.read_csv(DATASETS_DIR / "diabetes.csv", header=None)
+
+def load_heart():
+    return pd.read_csv(DATASETS_DIR / "heart.csv", header=0)
