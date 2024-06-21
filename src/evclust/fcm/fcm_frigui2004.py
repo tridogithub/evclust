@@ -179,7 +179,7 @@ def scad1(x, c, m=2, K=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose
     return {'fuzzy_part': u, 'centers': v, 'weights': w, 'obj_func': j}
 
 
-def scad2(x, c, q=2, m=2, K=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=False):
+def scad2(x, c, q=2, m=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=False):
     """
     SCAD2 - Weighted Fuzzy C-means
     Args:
@@ -187,7 +187,6 @@ def scad2(x, c, q=2, m=2, K=2, epsilon=1e-3, init="kmeans", stop_factor=None, ve
         x: data set
         c: number of clusters
         m: membership opponent (fuzzier) (>= 1)
-        K: constant to calculate the Delta
         epsilon: the stopping condition
         init: the initialization of centers
         stop_factor: "weight" for weight change, "center" for center change, None for objective function change
@@ -214,7 +213,6 @@ def scad2(x, c, q=2, m=2, K=2, epsilon=1e-3, init="kmeans", stop_factor=None, ve
     # Initialize weight matrix to 1/d (d is number of dimensions/features)
     w0 = np.ones((c, d)) / d
     if verbose:
-        print(f"Initial K: {K}")
         print(f"Initial weights: {w0}")
 
     j_old = np.inf
