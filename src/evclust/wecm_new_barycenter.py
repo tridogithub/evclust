@@ -203,8 +203,8 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         if disp:
             print([iteration, J])
 
-        weights_change = np.abs(np.linalg.norm(w - w0))
-        centers_change = np.abs(np.linalg.norm(v - v0))
+        weights_change = np.abs(np.linalg.norm(w) - np.linalg.norm(w0))
+        centers_change = np.abs(np.linalg.norm(v) - np.linalg.norm(v0))
 
         J_change = np.abs(J - j_old)
         if stopping_factor == "weight":
