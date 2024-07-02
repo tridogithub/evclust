@@ -93,3 +93,8 @@ def load_heart():
 def load_ilpd():
     return pd.read_csv(DATASETS_DIR / "ilpd.csv", header=0)
 
+def load_vehicule():
+    return pd.read_csv(DATASETS_DIR / "vehicule.csv", header=0)
+
+def load_satimage():
+    return pd.read_csv(DATASETS_DIR / "satimage.csv", header=0)
