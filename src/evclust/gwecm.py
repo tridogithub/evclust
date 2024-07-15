@@ -7,6 +7,7 @@ This module contains the main function for w-ecm (Weighted ECM clustering) with 
 # ---------------------- Packages------------------------------------------------
 from evclust.utils import makeF, extractMass
 import numpy as np
+import math
 from scipy.cluster.vq import kmeans
 
 
@@ -21,7 +22,7 @@ def __calcualte_barycenters(v, f, d, F):
     return vplus
 
 
-def __get_objective_func_value(w, m, vplus, F, x, alpha, beta, delta):
+def __get_objective_func_value(w, m, vplus, F, x, alpha, beta, delta, gamma):
     n = m.shape[0]
     f = F.shape[0]
     card = np.sum(F[1:f, :], axis=1)
@@ -31,17 +32,18 @@ def __get_objective_func_value(w, m, vplus, F, x, alpha, beta, delta):
     wp = np.tile(w, (n, 1))  # Weight of each dimension wrt cluster j, repeated n times
     for j in range(f - 1):
         vj = np.tile(vplus[j, :], (n, 1))
-        dw2[:, j] = np.nansum(((x - vj) * wp) ** 2, axis=1)
+        dw2[:, j] = np.nansum((x - vj) ** 2 * wp, axis=1)
 
     # Calculate objective function's new value
+    w_entropy = gamma * np.sum(w * np.log(w))
     mvide = 1 - np.sum(m, axis=1)
 
     j1 = np.nansum((m ** beta) * dw2[:, :f - 1] * (np.tile(card[:f - 1] ** alpha, (n, 1))) + (delta ** 2) * np.nansum(
-        mvide[:f - 1] ** beta))
+        mvide[:f - 1] ** beta)) + w_entropy
     return j1
 
 
-def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor=None, init="kmeans", disp=True):
+def gwecm(x, c, v0=None, gamma=1, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor=None, init="kmeans", disp=True):
     """
     Evidential C-means clustering with new equation of bary-centers, and feature-weight integration
     Args:
@@ -51,6 +53,8 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
             Number of clusters.
         v0:
             Initial prototypes, matrix of size (c x d). If not provided, the prototypes are initialized according to 'init'.
+        gamma:
+            Parameter of feature weight entropy
         alpha:
             Exponent of the cardinality in the cost function.
         beta:
@@ -113,7 +117,7 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
         dw2 = np.zeros((n, f - 1))
         wp = np.tile(w0, (n, 1))  # Weight of each dimension, repeated n times
         for j in range(f - 1):
-            dw2[:, j] = np.nansum(((x - np.tile(vplus[j, :], (n, 1))) * wp) ** 2, axis=1)
+            dw2[:, j] = np.nansum((x - np.tile(vplus[j, :], (n, 1))) ** 2 * wp, axis=1)
 
         # Update memberships
         m = np.zeros((n, f - 1))
@@ -135,7 +139,8 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
             aj = np.tile(card, (n, 1)) ** alpha
             tmp3 = aj * (m ** beta) * (tmp1 - tmp2) ** 2
             tmp[0, p] = np.sum(tmp3)
-        w = 1 / (tmp * np.sum((1/tmp)))
+        tmp = math.e ** (- tmp / gamma)
+        w = tmp / np.sum(tmp)
         # print(f"Weights: {w}")
 
         # Update centers
@@ -157,7 +162,7 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
                         for j in indices:
                             aj = card[j] ** (alpha - 2)
                             mj_beta = m[:, j] ** beta
-                            wp = w0[0, p] ** 2
+                            wp = w0[0, p]
                             H[l, k] += np.sum(mj_beta * aj * wp)
 
             B = np.zeros((c, 1))
@@ -169,7 +174,7 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
                     0]  # indices of all Aj including wl
                 indices = indices - 1
 
-                wp = w0[0, p] ** 2
+                wp = w0[0, p]
                 tmp1 = np.tile(card[indices] ** (alpha - 1), (n, 1)) * m[:, indices] ** beta * wp
                 tmp2 = np.sum(tmp1, axis=1)
                 tmp3 = tmp2.reshape(n, 1)
@@ -180,7 +185,7 @@ def gwecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_facto
         vplus = __calcualte_barycenters(v, f, d, F)
         # print(f"Centers: {vplus}")
 
-        J = __get_objective_func_value(w, m, vplus, F, x, alpha, beta, delta)
+        J = __get_objective_func_value(w, m, vplus, F, x, alpha, beta, delta, gamma)
         iteration += 1
         if disp:
             print([iteration, J])
