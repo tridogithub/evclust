@@ -382,4 +382,4 @@ def wilcoxon_holm(alpha=0.05, df_perf=None):
 # df_perf = pd.read_csv('example.csv', index_col=False)
 df_perf = pd.read_csv('expr_results.csv', index_col=False)
 
-draw_cd_diagram(df_perf=df_perf, title='ARI', labels=True, alpha=0.08)
+draw_cd_diagram(df_perf=df_perf, title='ARI', labels=True, alpha=0.25)

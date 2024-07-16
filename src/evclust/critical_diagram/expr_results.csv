@@ -8,7 +8,7 @@ SCAD2,Toys2C2D,0.88
 IFWFCM,Toys2C2D,0.83
 IFWFCM_KD,Toys2C2D,0.72
 WFCM_Wang,Toys2C2D,0.81
-GWECM,Toys2C2D,0.53
+GWECM,Toys2C2D,0.81
 ECM,Toys2C6D,0.90
 WECM,Toys2C6D,0.89
 WECM2,Toys2C6D,0.98
@@ -18,17 +18,17 @@ SCAD2,Toys2C6D,0.98
 IFWFCM,Toys2C6D,0.94
 IFWFCM_KD,Toys2C6D,0.94
 WFCM_Wang,Toys2C6D,0.90
-GWECM,Toys2C6D,0.91
+GWECM,Toys2C6D,0.94
 ECM,Toys3C2D,0.87
-WECM,Toys3C2D,0.93
-WECM2,Toys3C2D,0.96
-WFCM_Keller,Toys3C2D,0.94
-SCAD1,Toys3C2D,0.92
+WECM,Toys3C2D,0.95
+WECM2,Toys3C2D,0.97
+WFCM_Keller,Toys3C2D,0.96
+SCAD1,Toys3C2D,0.93
 SCAD2,Toys3C2D,0.97
-IFWFCM,Toys3C2D,0.83
-IFWFCM_KD,Toys3C2D,0.94
-WFCM_Wang,Toys3C2D,0.88
-GWECM,Toys3C2D,0.54
+IFWFCM,Toys3C2D,0.39
+IFWFCM_KD,Toys3C2D,0.96
+WFCM_Wang,Toys3C2D,0.90
+GWECM,Toys3C2D,0.94
 ECM,IRIS,0.66
 WECM,IRIS,0.90
 WECM2,IRIS,0.79
@@ -38,7 +38,7 @@ SCAD2,IRIS,0.80
 IFWFCM,IRIS,0.63
 IFWFCM_KD,IRIS,0.68
 WFCM_Wang,IRIS,0.89
-GWECM,IRIS,0.38
+GWECM,IRIS,0.72
 ECM,LettersIJL,0.16
 WECM,LettersIJL,0.13
 WECM2,LettersIJL,0.16
@@ -58,7 +58,7 @@ SCAD2,Seeds,0.31
 IFWFCM,Seeds,0.61
 IFWFCM_KD,Seeds,0.71
 WFCM_Wang,Seeds,0.47
-GWECM,Seeds,0.44
+GWECM,Seeds,0.47
 ECM,Wine,0.82
 WECM,Wine,0.42
 WECM2,Wine,0.71
@@ -68,7 +68,7 @@ SCAD2,Wine,0.74
 IFWFCM,Wine,0.83
 IFWFCM_KD,Wine,0.83
 WFCM_Wang,Wine,0.80
-GWECM,Wine,0.83
+GWECM,Wine,0.85
 ECM,Forest_Type,0.16
 WECM,Forest_Type,0.22
 WECM2,Forest_Type,0.27
@@ -78,7 +78,7 @@ SCAD2,Forest_Type,0.37
 IFWFCM,Forest_Type,0.12
 IFWFCM_KD,Forest_Type,0.12
 WFCM_Wang,Forest_Type,0.31
-GWECM,Forest_Type,0.15
+GWECM,Forest_Type,0.16
 ECM,Thyroid,0.78
 WECM,Thyroid,0.17
 WECM2,Thyroid,0.37
@@ -88,7 +88,7 @@ SCAD2,Thyroid,0.38
 IFWFCM,Thyroid,0.61
 IFWFCM_KD,Thyroid,0.62
 WFCM_Wang,Thyroid,0.69
-GWECM,Thyroid,0.13
+GWECM,Thyroid,0.72
 ECM,Crescent2D,0.80
 WECM,Crescent2D,0.98
 WECM2,Crescent2D,0.98
@@ -98,7 +98,7 @@ SCAD2,Crescent2D,0.98
 IFWFCM,Crescent2D,0.00
 IFWFCM_KD,Crescent2D,0.00
 WFCM_Wang,Crescent2D,0.98
-GWECM,Crescent2D,0.89
+GWECM,Crescent2D,0.88
 ECM,Ionoshpere,0.17
 WECM,Ionoshpere,0.16
 WECM2,Ionoshpere,0.18
@@ -108,7 +108,7 @@ SCAD2,Ionoshpere,0.17
 IFWFCM,Ionoshpere,0.14
 IFWFCM_KD,Ionoshpere,0.15
 WFCM_Wang,Ionoshpere,0.18
-GWECM,Ionoshpere,0.17
+GWECM,Ionoshpere,0.15
 ECM,Breast,0.79
 WECM,Breast,0.40
 WECM2,Breast,0.68
@@ -118,7 +118,7 @@ SCAD2,Breast,0.72
 IFWFCM,Breast,0.81
 IFWFCM_KD,Breast,0.82
 WFCM_Wang,Breast,0.81
-GWECM,Breast,0.70
+GWECM,Breast,0.67
 ECM,Heart_disease,0.28
 WECM,Heart_disease,0.27
 WECM2,Heart_disease,0.41
@@ -128,7 +128,7 @@ SCAD2,Heart_disease,0.41
 IFWFCM,Heart_disease,0.25
 IFWFCM_KD,Heart_disease,0.16
 WFCM_Wang,Heart_disease,0.18
-GWECM,Heart_disease,0.04
+GWECM,Heart_disease,0.22
 ECM,Column,0.21
 WECM,Column,0.40
 WECM2,Column,0.21
@@ -138,7 +138,7 @@ SCAD2,Column,0.21
 IFWFCM,Column,0.18
 IFWFCM_KD,Column,0.24
 WFCM_Wang,Column,0.37
-GWECM,Column,0.24
+GWECM,Column,0.22
 ECM,Haberman,0.00
 WECM,Haberman,0.17
 WECM2,Haberman,0.15
@@ -158,7 +158,7 @@ SCAD2,Waveform,0.24
 IFWFCM,Waveform,0.23
 IFWFCM_KD,Waveform,0.26
 WFCM_Wang,Waveform,0.26
-GWECM,Waveform,0.25
+GWECM,Waveform,0.12
 ECM,Vehicule,0.08
 WECM,Vehicule,0.14
 WECM2,Vehicule,0.13
@@ -178,4 +178,4 @@ SCAD2,Satimage,0.53
 IFWFCM,Satimage,0.54
 IFWFCM_KD,Satimage,0.49
 WFCM_Wang,Satimage,0.52
-GWECM,Satimage,0.36
+GWECM,Satimage,0.25
