@@ -98,3 +98,6 @@ def load_vehicule():
 
 def load_satimage():
     return pd.read_csv(DATASETS_DIR / "satimage.csv", header=0)
+
+def load_edol():
+    return pd.read_csv(DATASETS_DIR / "edol_db.csv", header=0)
