@@ -9,7 +9,7 @@ from evclust.utils import makeF, extractMass
 import numpy as np
 from scipy.cluster.vq import kmeans
 
-def __calcualte_barycenters(v, w, f, d, F, w0k2):
+def __calcualte_barycenters(v, f, d, F, w0k2):
     vplus = np.zeros((f - 1, d))
     # Calculate (2^c - 1) centroids vplus
     for i in range(1, f):
@@ -119,7 +119,7 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
         w0k2 = w0k ** 2
 
         if vplus is None:
-            vplus = __calcualte_barycenters(v0, w0, f, d, F, w0k2)
+            vplus = __calcualte_barycenters(v0, f, d, F, w0k2)
 
         # Calculate weighted distances
         dw2 = np.zeros((n, f - 1))
@@ -196,7 +196,7 @@ def wecm(x, c, v0=None, alpha=1, beta=2, delta=10, epsilon=1e-3, stopping_factor
                     B[k, 0] += np.nansum(tmp2)
             vp = np.linalg.solve(H, B)
             v[:, p] = vp.transpose()
-        vplus = __calcualte_barycenters(v, w, f, d, F, w0k2)
+        vplus = __calcualte_barycenters(v, f, d, F, w0k2)
 
         J = __get_objective_func_value(w, m, v, F, x, alpha, beta, delta)
         iteration += 1

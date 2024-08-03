@@ -8,7 +8,7 @@ import math
 
 
 # ---------------- (Start) Functions for calculating new weights ---------------------------
-def get_new_weights(w0, x, w_beta, learning_rate):
+def __get_new_weights(w0, x, w_beta, learning_rate):
     n = x.shape[0]
     d = w0.shape[0]
 
@@ -36,7 +36,7 @@ def get_new_weights(w0, x, w_beta, learning_rate):
     return new_w
 
 
-def calculate_evaluation_func(x, w, w_beta):
+def __calculate_evaluation_func(x, w, w_beta):
     n = x.shape[0]
 
     # Calculate distance between data points
@@ -57,7 +57,7 @@ def calculate_evaluation_func(x, w, w_beta):
     return e_func
 
 
-def computing_weights_by_minimizing_evaluation_func(x, w_beta):
+def __computing_weights_by_minimizing_evaluation_func(x, w_beta):
     epsilon = 1e-3
     learning_rate = 0.3
 
@@ -69,9 +69,9 @@ def computing_weights_by_minimizing_evaluation_func(x, w_beta):
     finis = False
     iteration = 0
     while not finis and iteration <= 100:
-        e0 = calculate_evaluation_func(x, w0, w_beta)
-        w = get_new_weights(w0, x, w_beta, learning_rate)
-        e = calculate_evaluation_func(x, w, w_beta)
+        e0 = __calculate_evaluation_func(x, w0, w_beta)
+        w = __get_new_weights(w0, x, w_beta, learning_rate)
+        e = __calculate_evaluation_func(x, w, w_beta)
 
         e_change = np.abs(e - e0)
         finis = e_change < epsilon
@@ -84,7 +84,7 @@ def computing_weights_by_minimizing_evaluation_func(x, w_beta):
 
 # ---------------- (END) Functions for calculating new weights ---------------------------
 
-def calculate_objective_func(x, v, m, w, beta):
+def __calculate_objective_func(x, v, m, w, beta):
     """
     Calculate the objective function value
     Args:
@@ -140,7 +140,7 @@ def fcm(x, c, w_beta, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, ver
         print(f"Initial centers: {v0}")
 
     # Initialize weight matrix
-    w0 = computing_weights_by_minimizing_evaluation_func(x, w_beta)
+    w0 = __computing_weights_by_minimizing_evaluation_func(x, w_beta)
 
     j_old = np.inf
     finis = False
@@ -171,7 +171,7 @@ def fcm(x, c, w_beta, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, ver
             tmp4 = tmp3 / tmp1
             v[:, p] = tmp4
 
-        j = calculate_objective_func(x, v, m, w0, beta)
+        j = __calculate_objective_func(x, v, m, w0, beta)
 
         j_change = np.abs(j - j_old)
         v_change = np.linalg.norm(v - v0)

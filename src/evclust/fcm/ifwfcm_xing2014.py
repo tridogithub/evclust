@@ -12,7 +12,7 @@ import numpy as np
 from scipy.cluster.vq import kmeans
 
 
-def calculate_objective_func(x, v, m, w, beta):
+def __calculate_objective_func(x, v, m, w, beta):
     """
     Calculate the objective function value
     Args:
@@ -111,7 +111,7 @@ def fcm(x, c, beta=2, epsilon=1e-3, init="kmeans", stop_factor=None, verbose=Fal
         tmp1 = np.nansum(1 / w)
         w = 1 / (w * tmp1)
 
-        j = calculate_objective_func(x, v, m, w, beta)
+        j = __calculate_objective_func(x, v, m, w, beta)
 
         j_change = np.abs(j - j_old)
         v_change = np.linalg.norm(v - v0)
